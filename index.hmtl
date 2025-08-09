@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Credit Card Form Filler (Test)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main>
+    <h1>Credit Card Enrolment — Form Filler (Test)</h1>
+
+    <!-- Header / Payment Options -->
+    <section class="section header">
+      <h2>Payment Options</h2>
+      <label class="row">
+        <span>One-time charge amount (RM)</span>
+        <input id="onetime_amt" type="number" inputmode="numeric" placeholder="e.g. 150.00">
+      </label>
+      <label class="inline">
+        <input id="onetime_alloutstanding" type="checkbox"> Charge all outstanding
+      </label>
+      <label class="inline">
+        <input id="onetime_tick" type="checkbox"> Request one-time charge
+      </label>
+      <label class="inline">
+        <input id="ccagree" type="checkbox"> I agree to recurring card debit (CCAgree)
+      </label>
+    </section>
+
+    <!-- Policy entries grouped under Section A -->
+    <section class="section">
+      <h2>Section A — Policy Entries</h2>
+
+      <!-- Policy Entry template repeated 4 times -->
+      <div class="policy-grid">
+        <div class="policy">
+          <h3>Policy Entry 1</h3>
+          <label>Policy No.
+            <input id="policy1_no" type="text" placeholder="PolicyNo1">
+          </label>
+          <label>Insured Name
+            <input id="insured1_name" type="text" placeholder="Insured1">
+          </label>
+          <fieldset class="relationship" id="relationship1">
+            <legend>Relationship (choose one)</legend>
+            <label><input name="rel1" id="Relationship1_spouse" type="radio" value="Relationship1_spouse"> Spouse</label>
+            <label><input name="rel1" id="Relationship1_children" type="radio" value="Relationship1_children"> Children</label>
+            <label><input name="rel1" id="Relationship1_Parent" type="radio" value="Relationship1_Parent"> Parent</label>
+            <label><input name="rel1" id="Relationship1_Grandparent" type="radio" value="Relationship1_Grandparent"> Grandparent</label>
+            <label><input name="rel1" id="Relationship1_Sibling" type="radio" value="Relationship1_Sibling"> Sibling</label>
+            <label><input name="rel1" id="Relationship1_Company" type="radio" value="Relationship1_Company"> Employer/Company</label>
+            <label><input name="rel1" id="Relationship1_Ownself" type="radio" value="Relationship1_Ownself"> Ownself</label>
+          </fieldset>
+        </div>
+
+        <div class="policy">
+          <h3>Policy Entry 2</h3>
+          <label>Policy No.
+            <input id="policy2_no" type="text" placeholder="PolicyNo2">
+          </label>
+          <label>Insured Name
+            <input id="insured2_name" type="text" placeholder="Insured2">
+          </label>
+          <fieldset class="relationship" id="relationship2">
+            <legend>Relationship (choose one)</legend>
+            <label><input name="rel2" id="Relationship2_spouse" type="radio" value="Relationship2_spouse"> Spouse</label>
+            <label><input name="rel2" id="Relationship2_children" type="radio" value="Relationship2_children"> Children</label>
+            <label><input name="rel2" id="Relationship2_Parent" type="radio" value="Relationship2_Parent"> Parent</label>
+            <label><input name="rel2" id="Relationship2_Grandparent" type="radio" value="Relationship2_Grandparent"> Grandparent</label>
+            <label><input name="rel2" id="Relationship2_Sibling" type="radio" value="Relationship2_Sibling"> Sibling</label>
+            <label><input name="rel2" id="Relationship2_Company" type="radio" value="Relationship2_Company"> Employer/Company</label>
+            <label><input name="rel2" id="Relationship2_Ownself" type="radio" value="Relationship2_Ownself"> Ownself</label>
+          </fieldset>
+        </div>
+
+        <div class="policy">
+          <h3>Policy Entry 3</h3>
+          <label>Policy No.
+            <input id="policy3_no" type="text" placeholder="PolicyNo3">
+          </label>
+          <label>Insured Name
+            <input id="insured3_name" type="text" placeholder="Insured3">
+          </label>
+          <fieldset class="relationship" id="relationship3">
+            <legend>Relationship (choose one)</legend>
+            <label><input name="rel3" id="Relationship3_spouse" type="radio" value="Relationship3_spouse"> Spouse</label>
+            <label><input name="rel3" id="Relationship3_children" type="radio" value="Relationship3_children"> Children</label>
+            <label><input name="rel3" id="Relationship3_Parent" type="radio" value="Relationship3_Parent"> Parent</label>
+            <label><input name="rel3" id="Relationship3_Grandparent" type="radio" value="Relationship3_Grandparent"> Grandparent</label>
+            <label><input name="rel3" id="Relationship3_Sibling" type="radio" value="Relationship3_Sibling"> Sibling</label>
+            <label><input name="rel3" id="Relationship3_Company" type="radio" value="Relationship3_Company"> Employer/Company</label>
+            <label><input name="rel3" id="Relationship3_Ownself" type="radio" value="Relationship3_Ownself"> Ownself</label>
+          </fieldset>
+        </div>
+
+        <div class="policy">
+          <h3>Policy Entry 4</h3>
+          <label>Policy No.
+            <input id="policy4_no" type="text" placeholder="PolicyNo4">
+          </label>
+          <label>Insured Name
+            <input id="insured4_name" type="text" placeholder="Insured4">
+          </label>
+          <fieldset class="relationship" id="relationship4">
+            <legend>Relationship (choose one)</legend>
+            <label><input name="rel4" id="Relationship4_spouse" type="radio" value="Relationship4_spouse"> Spouse</label>
+            <label><input name="rel4" id="Relationship4_children" type="radio" value="Relationship4_children"> Children</label>
+            <label><input name="rel4" id="Relationship4_Parent" type="radio" value="Relationship4_Parent"> Parent</label>
+            <label><input name="rel4" id="Relationship4_Grandparent" type="radio" value="Relationship4_Grandparent"> Grandparent</label>
+            <label><input name="rel4" id="Relationship4_Sibling" type="radio" value="Relationship4_Sibling"> Sibling</label>
+            <label><input name="rel4" id="Relationship4_Company" type="radio" value="Relationship4_Company"> Employer/Company</label>
+            <label><input name="rel4" id="Relationship4_Ownself" type="radio" value="Relationship4_Ownself"> Ownself</label>
+          </fieldset>
+        </div>
+      </div>
+    </section>
+
+    <!-- Card Details -->
+    <section class="section">
+      <h2>Card Details</h2>
+
+      <div class="row">
+        <label class="inline"><input name="cardType" id="CC_Tick" type="radio" value="CC_Tick"> Credit Card</label>
+        <label class="inline"><input name="cardType" id="DebitC_Tick" type="radio" value="DebitC_Tick"> Debit Card</label>
+      </div>
+
+      <label>Card Number (enter 16 digits)</label>
+      <input id="card_number" type="tel" inputmode="numeric" maxlength="19" placeholder="1234 5678 9012 3456">
+
+      <div class="row small">
+        <label>Expiry MM
+          <input id="card_exp_mm" maxlength="2" type="text" inputmode="numeric" placeholder="MM">
+        </label>
+        <label>Expiry YY
+          <input id="card_exp_yy" maxlength="2" type="text" inputmode="numeric" placeholder="YY">
+        </label>
+      </div>
+
+      <label>Card Issuing Bank
+        <input id="CardBank" type="text" placeholder="CardBank">
+      </label>
+
+      <label>Name on Card
+        <input id="CardName" type="text" placeholder="CardName">
+      </label>
+
+      <div class="row">
+        <label class="inline"><input name="brand" id="Visa_Tick" type="radio" value="Visa_Tick"> Visa</label>
+        <label class="inline"><input name="brand" id="Master_Tick" type="radio" value="Master_Tick"> Master</label>
+      </div>
+    </section>
+
+    <!-- Signature -->
+    <section class="section">
+      <h2>Signature</h2>
+      <canvas id="signatureCanvas"></canvas>
+      <div class="row">
+        <button type="button" id="clearSig" class="secondary">Clear Signature</button>
+      </div>
+      <div class="row small">
+        <label>Signed by (owner)
+          <input id="Sign_OwnerName" type="text">
+        </label>
+        <label>Owner NRIC
+          <input id="Sign_OwnerNIRC" type="text">
+        </label>
+      </div>
+    </section>
+
+    <!-- Third Party / Source -->
+    <section class="section">
+      <h2>Third Party / Payor</h2>
+      <label><input id="ThirdPP_Yes" type="checkbox"> Third party payor?</label>
+      <label>Third Party Name
+        <input id="ThirdPP_Name" type="text">
+      </label>
+      <label>Third Party Email
+        <input id="ThirdPP_Email" type="email">
+      </label>
+
+      <h3>Source of Funds (choose all that apply)</h3>
+      <label><input id="ThirdPP_SourceFund_Self" type="checkbox"> Self</label>
+      <label><input id="ThirdPP_SourceFund_Parent" type="checkbox"> Parent(s)</label>
+      <label><input id="ThirdPP_SourceFund_Spouse" type="checkbox"> Spouse</label>
+      <label><input id="ThirdPP_SourceFund_Others" type="checkbox"> Others</label>
+      <label>If others, specify
+        <input id="ThirdPP_SourceFund_Others_Write" type="text">
+      </label>
+
+      <h3>Source of Wealth (choose all that apply)</h3>
+      <label><input id="ThirdPP_SourceWealth_EmployBus" type="checkbox"> Employment / Business</label>
+      <label><input id="ThirdPP_SourceWealth_Invest" type="checkbox"> Investment</label>
+      <label><input id="ThirdPP_SourceWealth_Inherit" type="checkbox"> Inheritance</label>
+      <label><input id="ThirdPP_SourceWealth_Savings" type="checkbox"> Savings</label>
+      <label><input id="ThirdPP_SourceWealth_Parents" type="checkbox"> Parents</label>
+      <label><input id="ThirdPP_SourceWealth_Spouse" type="checkbox"> Spouse</label>
+      <label><input id="ThirdPP_SourceWealth_Others" type="checkbox"> Others</label>
+      <label>If others, specify
+        <input id="ThirdPP_SourceWealth_Others_Write" type="text">
+      </label>
+    </section>
+
+    <!-- Actions -->
+    <section class="section actions">
+      <button id="generate">Generate PDF</button>
+      <button id="resetAll" class="secondary">Reset All</button>
+    </section>
+
+    <footer>
+      <small>Make sure <code>Credit Card Enrolment Form_LF4092_200524_fillable.pdf</code> is in the same folder.</small>
+    </footer>
+  </main>
+
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
