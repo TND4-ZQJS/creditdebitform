@@ -27,3 +27,11 @@ footer{margin-top:12px;color:var(--muted)}
   .policy-grid{grid-template-columns:1fr}
   .card-digit{width:60px}
 }
+
+/* Add this new block to your style.css */
+/* Ensures checkboxes and radio buttons have a little space after them */
+.inline input[type="checkbox"],
+.inline input[type="radio"] {
+  margin-right: 8px; 
+}
+
