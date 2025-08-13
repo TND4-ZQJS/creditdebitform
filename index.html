@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Credit/Debit Card Enrolment — Single File (Fixed One-time Logic)</title>
+<title>Credit/Debit Card Enrolment — Web Filler</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
   :root{
@@ -35,8 +35,8 @@
   .header-grid{
     margin-top:10px;
     display:grid;gap:10px;
-    grid-template-columns: 1fr 1fr 220px; /* Charge all | One-time | Amount */
-    align-items:end;
+    grid-template-columns: 1fr 1fr;
+    align-items:start;
   }
   .header-item{
     background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px
@@ -46,6 +46,50 @@
   .header-item input[type=checkbox]{margin:0}
   .amount-wrap{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
   .amount-wrap label{margin:0}
+
+  .onetime-charge-options {
+    grid-column: 2 / -1;
+    opacity: 0.5;
+    pointer-events: none; /* Prevents interaction when dimmed */
+  }
+
+  .onetime-charge-options.active {
+    opacity: 1;
+    pointer-events: auto; /* Allows interaction when active */
+  }
+
+  .onetime-charge-options fieldset{
+    border: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .onetime-charge-options input[type="number"]{
+    width: auto;
+    margin-top: 0;
+  }
+
+  .onetime-charge-options input[type="number"][disabled] {
+    background-color: #f6f7f9;
+    cursor: not-allowed;
+  }
+  
+  .onetime-charge-options .row{
+    align-items: center;
+  }
+
+  .onetime-charge-options .row:has(#Onetimecharge_alloutstanding:not(:checked)) .option-label {
+    color: var(--muted);
+  }
+  .onetime-charge-options .row:has(#Onetimecharge_specific:not(:checked)) .option-label {
+    color: var(--muted);
+  }
+  .onetime-charge-options .row:has(#Onetimecharge_specific:not(:checked)) #Onetimecharge_amt {
+    opacity: 0.5;
+  }
 
   /* Card number */
   .card-number-block .card-number-inputs{display:flex;gap:8px;margin-top:8px}
@@ -69,8 +113,8 @@
   }
 
   @media (max-width:900px){
-    .header-grid{grid-template-columns:1fr 1fr}
-    .amount-wrap{grid-column:1 / -1}
+    .header-grid{grid-template-columns:1fr}
+    .onetime-charge-options{grid-column: 1 / -1;}
   }
   @media (max-width:720px){
     .policy-grid{grid-template-columns:1fr}
@@ -82,7 +126,6 @@
 <main>
   <h1>Credit/Debit Card Enrolment — Prototype</h1>
 
-  <!-- HEADER -->
   <section class="section header">
     <h2>Header</h2>
 
@@ -91,34 +134,34 @@
       <div class="title">I agree for recurring credit/debit card services</div>
     </div>
 
-    <!-- Grid: column1 = (Charge All) hidden unless One-time checked; column2 = Request one-time (always visible) ; col3 = amount (also hidden unless One-time checked) -->
     <div class="header-grid">
-            <div class="header-item">
+      <div class="header-item">
         <label class="inline">
           <input id="Onetimecharge_tick" type="checkbox" />
           <span>Request one-time charge</span>
         </label>
       </div>
-      
-      <div class="header-item" id="alloutstandingContainer">
-        <label class="inline">
-          <input id="Onetimecharge_alloutstanding" type="checkbox" />
-          <span>One-time Charge for All Outstanding</span>
-        </label>
-      </div>
 
-
-
-      <div class="amount-wrap" id="amountContainer">
-        <label>One-time Charge Amount (RM)
-          <input id="Onetimecharge_amt" type="number" step="0.01" placeholder="0.00" disabled />
-        </label>
-        <small class="muted">Enabled only when "One-time Charge for All Outstanding" is not selected.</small>
+      <div class="header-item onetime-charge-options">
+        <fieldset>
+          <div class="row">
+            <label class="inline">
+              <input type="radio" name="onetime_charge_option" id="Onetimecharge_alloutstanding" value="all" />
+              <span class="option-label">One-time Charge for All Outstanding</span>
+            </label>
+          </div>
+          <div class="row">
+            <label class="inline">
+              <input type="radio" name="onetime_charge_option" id="Onetimecharge_specific" value="specific" />
+              <span class="option-label">One-time Charge Amount (RM)</span>
+            </label>
+            <input id="Onetimecharge_amt" type="number" step="0.01" placeholder="0.00" disabled />
+          </div>
+        </fieldset>
       </div>
     </div>
   </section>
 
-  <!-- SECTION A: Policy Entries -->
   <section class="section" id="sectionA">
     <h2>Section A — Policy Entries</h2>
 
@@ -130,7 +173,6 @@
     </div>
   </section>
 
-  <!-- CARD DETAILS -->
   <section class="section">
     <h2>Card Details</h2>
 
@@ -178,7 +220,6 @@
     </div>
   </section>
 
-  <!-- SIGNATURE -->
   <section class="section">
     <h2>Signature</h2>
     <canvas id="signatureCanvas"></canvas>
@@ -211,7 +252,6 @@
     </div>
   </section>
 
-  <!-- THIRD PARTY -->
   <section class="section">
     <h2>Third Party / Source</h2>
 
@@ -237,7 +277,6 @@
     <label class="inline"><input id="ThirdPP_SourceWealth_Others" type="checkbox"> <span>Others</span></label>
   </section>
 
-  <!-- ACTIONS -->
   <section class="section actions">
     <button id="generate">Generate PDF</button>
     <button id="resetAll" class="secondary">Reset All</button>
@@ -290,80 +329,80 @@ function autoBindSave(el){
   el.addEventListener((el.type === 'checkbox' || el.type === 'radio') ? 'change' : 'input', ()=> saveElValue(el));
 }
 
-/* ---------- HEADER logic (fixed) ---------- */
-const allOutstandingChk = $("Onetimecharge_alloutstanding");
+/* ---------- HEADER logic (revised for radio buttons) ---------- */
 const oneTimeChk = $("Onetimecharge_tick");
+const oneTimeOptions = document.querySelector('.onetime-charge-options');
+const allOutstandingRadio = $("Onetimecharge_alloutstanding");
+const specificAmountRadio = $("Onetimecharge_specific");
 const oneTimeAmt = $("Onetimecharge_amt");
-const alloutContainer = $("alloutstandingContainer");
-const amountContainer = $("amountContainer");
 
 function updateOneTimeUI(){
   if (oneTimeChk.checked){
-    // show sub-options
-    alloutContainer.style.display = '';
-    amountContainer.style.display = '';
-    allOutstandingChk.disabled = false;
-    // if charge-all selected, amount disabled
-    oneTimeAmt.disabled = !!allOutstandingChk.checked;
-    if (allOutstandingChk.checked){
-      oneTimeAmt.value = "";
-      localStorage.setItem("Onetimecharge_amt",""); // clear saved amount because UI prevents amount
-    }
+    oneTimeOptions.classList.add('active');
+    allOutstandingRadio.disabled = false;
+    specificAmountRadio.disabled = false;
+    oneTimeAmt.disabled = !specificAmountRadio.checked;
   } else {
-    // hide & clear sub-options
-    alloutContainer.style.display = 'none';
-    amountContainer.style.display = 'none';
-    allOutstandingChk.checked = false;
-    allOutstandingChk.disabled = true;
-    oneTimeAmt.value = "";
+    oneTimeOptions.classList.remove('active');
+    allOutstandingRadio.disabled = true;
+    specificAmountRadio.disabled = true;
     oneTimeAmt.disabled = true;
-    localStorage.setItem("Onetimecharge_alloutstanding", false);
-    localStorage.setItem("Onetimecharge_amt", "");
+    allOutstandingRadio.checked = false;
+    specificAmountRadio.checked = false;
+    oneTimeAmt.value = "";
+    localStorage.removeItem("onetime_charge_option");
+    localStorage.removeItem("Onetimecharge_amt");
   }
-  showSaveStatus();
 }
 
-// If user toggles Charge All: disable/clear amount
-allOutstandingChk.addEventListener('change', ()=>{
-  if (allOutstandingChk.checked){
-    oneTimeAmt.value = "";
-    oneTimeAmt.disabled = true;
-    saveElValue(oneTimeAmt); // clear saved amount
-  } else {
-    // only enable amount if oneTime checked
-    oneTimeAmt.disabled = !oneTimeChk.checked;
-  }
-  saveElValue(allOutstandingChk);
-  showSaveStatus();
-});
-
-// If user types amount: auto uncheck & disable Charge All
-oneTimeAmt.addEventListener('input', ()=>{
-  const val = (oneTimeAmt.value || "").toString().trim();
-  const hasVal = val !== "" && Number(val) > 0;
-  if (hasVal){
-    allOutstandingChk.checked = false;
-    allOutstandingChk.disabled = true;
-    saveElValue(allOutstandingChk);
-  } else {
-    // If no amount and oneTime is checked, re-enable charge-all
-    if (oneTimeChk.checked) allOutstandingChk.disabled = false;
-  }
-  saveElValue(oneTimeAmt);
-  showSaveStatus();
-});
-
 // Bind + restore main header controls
-["CCAgree","Onetimecharge_alloutstanding","Onetimecharge_tick","Onetimecharge_amt"].forEach(id=>{
+["CCAgree","Onetimecharge_tick"].forEach(id=>{
   const el = $(id);
   if(el) autoBindSave(el);
 });
 
-// show/hide whenever request-one-time toggles
+// Event listener for the main one-time charge checkbox
 oneTimeChk.addEventListener('change', ()=>{
   updateOneTimeUI();
   saveElValue(oneTimeChk);
 });
+
+// Event listener for the radio buttons
+[allOutstandingRadio, specificAmountRadio].forEach(radio => {
+  radio.addEventListener('change', () => {
+    oneTimeAmt.disabled = !specificAmountRadio.checked;
+    if (allOutstandingRadio.checked) {
+      oneTimeAmt.value = "";
+      localStorage.removeItem("Onetimecharge_amt");
+    }
+    localStorage.setItem("onetime_charge_option", radio.value);
+    showSaveStatus();
+  });
+});
+
+// Event listener for the amount input
+oneTimeAmt.addEventListener('input', ()=>{
+  saveElValue(oneTimeAmt);
+});
+
+// Initial state and restoration on page load
+function restoreOneTimeState(){
+  const isOneTimeChecked = localStorage.getItem("Onetimecharge_tick") === 'true';
+  const savedOption = localStorage.getItem("onetime_charge_option");
+  const savedAmount = localStorage.getItem("Onetimecharge_amt");
+
+  oneTimeChk.checked = isOneTimeChecked;
+
+  if (isOneTimeChecked) {
+    if (savedOption === 'all') {
+      allOutstandingRadio.checked = true;
+    } else if (savedOption === 'specific') {
+      specificAmountRadio.checked = true;
+      oneTimeAmt.value = savedAmount || "";
+    }
+  }
+  updateOneTimeUI();
+}
 
 /* ---------- SECTION A: Dynamic policies (Add/Remove like EPP) ---------- */
 const policiesContainer = $("policiesContainer");
@@ -606,19 +645,19 @@ $("clearSig").addEventListener("click", ()=>{ ctx.clearRect(0,0,canvas.width,can
 
 /* ---------- Restore on load ---------- */
 (function restoreAll(){
-  // Basic autosave bindings
-  document.querySelectorAll("input,select,textarea").forEach(el=> autoBindSave(el));
+  document.querySelectorAll("input,select,textarea").forEach(el=> {
+    if(el.id !== "Onetimecharge_amt" && el.name !== "onetime_charge_option") {
+      autoBindSave(el);
+    }
+  });
 
-  // Dynamic policies
+  restoreOneTimeState();
+
   policiesContainer.innerHTML = "";
   policyCount = 0;
   const savedCount = Math.max(1, Math.min(parseInt(localStorage.getItem("policyCount")) || 1, MAX_POLICIES));
   for(let i=1;i<=savedCount;i++){ addPolicy(); }
 
-  // Header sync after restore (uses restored oneTimeChk state)
-  updateOneTimeUI();
-
-  // Ensure CardName is uppercase on load
   const cn = $("CardName"); if(cn.value) cn.value = cn.value.toUpperCase();
 })();
 
@@ -654,10 +693,21 @@ async function fillPDF(){
 
     // HEADER
     safeCheck(form, "CCAgree", $("CCAgree").checked);
-    // Only include the sub-options if request-one-time is checked (the form will set checkboxes/amt only from DOM)
-    safeCheck(form, "Onetimecharge_alloutstanding", $("Onetimecharge_alloutstanding").checked);
     safeCheck(form, "Onetimecharge_tick", $("Onetimecharge_tick").checked);
-    safeSetText(form, "Onetimecharge_amt", $("Onetimecharge_amt").value || "");
+    
+    // One-time charge radio logic
+    if ($("Onetimecharge_tick").checked) {
+      if ($("Onetimecharge_alloutstanding").checked) {
+        safeCheck(form, "Onetimecharge_alloutstanding", true);
+        safeSetText(form, "Onetimecharge_amt", "");
+      } else if ($("Onetimecharge_specific").checked) {
+        safeCheck(form, "Onetimecharge_alloutstanding", false);
+        safeSetText(form, "Onetimecharge_amt", $("Onetimecharge_amt").value || "");
+      }
+    } else {
+      safeCheck(form, "Onetimecharge_alloutstanding", false);
+      safeSetText(form, "Onetimecharge_amt", "");
+    }
 
     // SECTION A — existing entries only (contiguous after renumber)
     const created = policiesContainer.querySelectorAll(".policy");
@@ -739,7 +789,7 @@ function resetAll(){
   keys.forEach(k=>{
     if(
       k.startsWith("PolicyNo") || k.startsWith("Insured") || k.startsWith("Relationship") ||
-      ["policyCount","CCAgree","Onetimecharge_alloutstanding","Onetimecharge_tick","Onetimecharge_amt",
+      ["policyCount","CCAgree","Onetimecharge_tick","onetime_charge_option",
        "CardName","CardNo_1","CardNo_2","CardNo_3","CardNo_4","CardExpry_M_Select","CardExpry_Y_Select","CardBank_Select",
        "CC_Tick","DebitC_Tick","Sign_OwnerName","Sign_OwnerNIRC","Sign_Date","Sign_Month","Sign_Year","Sign_State",
        "ThirdPP_Yes","ThirdPP_Name","ThirdPP_Email",
