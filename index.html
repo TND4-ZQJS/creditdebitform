@@ -220,6 +220,31 @@
     </div>
   </section>
 
+<section class="section">
+    <h2>Third Party / Source</h2>
+
+    <label class="inline"><input id="ThirdPP_Yes" type="checkbox"> <span>Third party payor?</span></label>
+    <label>Third Party Name <input id="ThirdPP_Name" type="text"></label>
+    <label>Third Party Email <input id="ThirdPP_Email" type="email"></label>
+
+    <h3>Source of Funds (select any)</h3>
+    <label class="inline"><input id="ThirdPP_SourceFund_Self" type="checkbox"> <span>Self</span></label>
+    <label class="inline"><input id="ThirdPP_SourceFund_Parent" type="checkbox"> <span>Parent(s)</span></label>
+    <label class="inline"><input id="ThirdPP_SourceFund_Spouse" type="checkbox"> <span>Spouse</span></label>
+    <label>If others specify <input id="ThirdPP_SourceFund_Others_Write" type="text"></label>
+    <label class="inline"><input id="ThirdPP_SourceFund_Others" type="checkbox"> <span>Others</span></label>
+
+    <h3>Source of Wealth (select any)</h3>
+    <label class="inline"><input id="ThirdPP_SourceWealth_EmployBus" type="checkbox"> <span>Employment/Business</span></label>
+    <label class="inline"><input id="ThirdPP_SourceWealth_Invest" type="checkbox"> <span>Investment</span></label>
+    <label class="inline"><input id="ThirdPP_SourceWealth_Inherit" type="checkbox"> <span>Inheritance</span></label>
+    <label class="inline"><input id="ThirdPP_SourceWealth_Savings" type="checkbox"> <span>Savings</span></label>
+    <label class="inline"><input id="ThirdPP_SourceWealth_Parents" type="checkbox"> <span>Parents</span></label>
+    <label class="inline"><input id="ThirdPP_SourceWealth_Spouse" type="checkbox"> <span>Spouse</span></label>
+    <label>If others specify <input id="ThirdPP_SourceWealth_Others_Write" type="text"></label>
+    <label class="inline"><input id="ThirdPP_SourceWealth_Others" type="checkbox"> <span>Others</span></label>
+  </section>
+
   <section class="section">
     <h2>Signature</h2>
     <canvas id="signatureCanvas"></canvas>
@@ -252,30 +277,6 @@
     </div>
   </section>
 
-  <section class="section">
-    <h2>Third Party / Source</h2>
-
-    <label class="inline"><input id="ThirdPP_Yes" type="checkbox"> <span>Third party payor?</span></label>
-    <label>Third Party Name <input id="ThirdPP_Name" type="text"></label>
-    <label>Third Party Email <input id="ThirdPP_Email" type="email"></label>
-
-    <h3>Source of Funds (select any)</h3>
-    <label class="inline"><input id="ThirdPP_SourceFund_Self" type="checkbox"> <span>Self</span></label>
-    <label class="inline"><input id="ThirdPP_SourceFund_Parent" type="checkbox"> <span>Parent(s)</span></label>
-    <label class="inline"><input id="ThirdPP_SourceFund_Spouse" type="checkbox"> <span>Spouse</span></label>
-    <label>If others specify <input id="ThirdPP_SourceFund_Others_Write" type="text"></label>
-    <label class="inline"><input id="ThirdPP_SourceFund_Others" type="checkbox"> <span>Others</span></label>
-
-    <h3>Source of Wealth (select any)</h3>
-    <label class="inline"><input id="ThirdPP_SourceWealth_EmployBus" type="checkbox"> <span>Employment/Business</span></label>
-    <label class="inline"><input id="ThirdPP_SourceWealth_Invest" type="checkbox"> <span>Investment</span></label>
-    <label class="inline"><input id="ThirdPP_SourceWealth_Inherit" type="checkbox"> <span>Inheritance</span></label>
-    <label class="inline"><input id="ThirdPP_SourceWealth_Savings" type="checkbox"> <span>Savings</span></label>
-    <label class="inline"><input id="ThirdPP_SourceWealth_Parents" type="checkbox"> <span>Parents</span></label>
-    <label class="inline"><input id="ThirdPP_SourceWealth_Spouse" type="checkbox"> <span>Spouse</span></label>
-    <label>If others specify <input id="ThirdPP_SourceWealth_Others_Write" type="text"></label>
-    <label class="inline"><input id="ThirdPP_SourceWealth_Others" type="checkbox"> <span>Others</span></label>
-  </section>
 
   <section class="section actions">
     <button id="generate">Generate PDF</button>
