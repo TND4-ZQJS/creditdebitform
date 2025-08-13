@@ -875,7 +875,7 @@ async function fillPDF(){
 
     // THIRD PARTY SECTION
 safeCheck(form, "ThirdPP_Yes", $("ThirdPP_Yes").checked);
-safeCheck(form, "ThirdPP_SubmittedNRIC", $("ThirdPP_SubmittedNRIC").checked);
+safeCheck(form, "ThirdPP_SubmittedNRIC", $("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked);
 
 if ($("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked) {
   [
