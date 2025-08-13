@@ -93,6 +93,13 @@
 
     <!-- Grid: column1 = (Charge All) hidden unless One-time checked; column2 = Request one-time (always visible) ; col3 = amount (also hidden unless One-time checked) -->
     <div class="header-grid">
+            <div class="header-item">
+        <label class="inline">
+          <input id="Onetimecharge_tick" type="checkbox" />
+          <span>Request one-time charge</span>
+        </label>
+      </div>
+      
       <div class="header-item" id="alloutstandingContainer">
         <label class="inline">
           <input id="Onetimecharge_alloutstanding" type="checkbox" />
@@ -100,12 +107,7 @@
         </label>
       </div>
 
-      <div class="header-item">
-        <label class="inline">
-          <input id="Onetimecharge_tick" type="checkbox" />
-          <span>Request one-time charge</span>
-        </label>
-      </div>
+
 
       <div class="amount-wrap" id="amountContainer">
         <label>Amount (RM)
