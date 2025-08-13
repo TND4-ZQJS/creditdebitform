@@ -2,90 +2,118 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Credit Card Enrolment — Amended (Single File)</title>
+<title>Credit/Debit Card Enrolment — Single File</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
-  :root{--bg:#f6f7f9;--card:#fff;--accent:#007aff;--muted:#666;}
+  :root{
+    --bg:#f6f7f9; --card:#fff; --accent:#007aff; --muted:#666; --line:#e9e9ee;
+  }
   *{box-sizing:border-box}
   body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial;margin:18px;background:var(--bg);color:#111}
-  main{max-width:980px;margin:0 auto;background:var(--card);padding:18px;border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,0.06)}
-  h1{margin-top:0;font-size:1.25rem}
-  .section{background:#fbfbfd;border:1px solid #eee;padding:12px;border-radius:8px;margin:12px 0}
-  .section h2{margin:0 0 8px 0}
+  main{max-width:980px;margin:0 auto;background:var(--card);padding:18px;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,0.06)}
+  h1{margin:0 0 12px 0;font-size:1.25rem}
+  .section{background:#fbfbfd;border:1px solid #eee;padding:14px;border-radius:10px;margin:12px 0}
+  .section h2{margin:0 0 10px 0;font-size:1.05rem}
   label{display:block;margin:8px 0;font-size:0.95rem}
   input[type=text],input[type=email],input[type=number],input[type=tel],select,textarea{
-    width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-top:6px;font-size:1rem;
+    width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;margin-top:6px;font-size:1rem;background:#fff
   }
-  .inline{display:inline-flex;align-items:center;gap:8px}
   .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:8px 0}
-  .header-row{align-items:center}
-  .amount{display:flex;flex-direction:column;min-width:180px}
   .muted{color:var(--muted);font-size:0.85rem}
-  button{background:var(--accent);color:#fff;border:0;padding:10px 14px;border-radius:8px;cursor:pointer}
+  button{background:var(--accent);color:#fff;border:0;padding:10px 14px;border-radius:10px;cursor:pointer}
   button.secondary{background:#999}
+  button.ghost{background:transparent;border:1px solid var(--line);color:#333}
   .actions{display:flex;gap:12px;align-items:center}
+
+  /* Header tidy alignment */
+  .header-agree{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;
+  }
+  .header-agree input[type=checkbox]{margin:0}
+  .header-agree .title{font-weight:600}
+  .header-grid{
+    margin-top:10px;
+    display:grid;gap:10px;
+    grid-template-columns: 1fr 1fr 220px; /* Charge all | One-time | Amount */
+    align-items:end;
+  }
+  .header-item{
+    background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px
+  }
+  .header-item .stack{display:flex;flex-direction:column;gap:6px;width:100%}
+  .header-item .inline{display:flex;align-items:center;gap:8px}
+  .header-item input[type=checkbox]{margin:0}
+  .amount-wrap{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .amount-wrap label{margin:0}
 
   /* Card number */
   .card-number-block .card-number-inputs{display:flex;gap:8px;margin-top:8px}
-  .card-digit{width:80px;padding:8px;border-radius:8px;border:1px solid #ddd;text-align:center;font-size:1.05rem}
+  .card-digit{width:80px;padding:10px;border-radius:10px;border:1px solid #ddd;text-align:center;font-size:1.05rem;background:#fff}
   .card-digit:focus{outline:2px solid rgba(0,122,255,0.15)}
 
   /* Policy grid */
   .policy-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .policy{background:#fff;padding:10px;border-radius:8px;border:1px solid #eee}
-  .policy h3{margin:0 0 8px 0;font-size:0.95rem}
+  .policy{background:#fff;padding:12px;border-radius:10px;border:1px solid #eee;position:relative}
+  .policy h3{margin:0 0 8px 0;font-size:0.95rem;display:flex;align-items:center;justify-content:space-between}
+  .policy .remove-btn{background:transparent;border:1px solid var(--line);color:#333;border-radius:8px;padding:6px 10px;font-size:0.9rem}
+  .policy .remove-btn:hover{border-color:#d0d0d7}
 
   /* Signature */
-  canvas{width:100%;height:150px;border-radius:8px;border:1px solid #ddd;background:#fff}
-
-  /* Header indent for sub-options */
-  .sub-options{margin-left:28px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+  canvas{width:100%;height:150px;border-radius:10px;border:1px solid #ddd;background:#fff}
 
   /* Save indicator */
-  #saveStatus{ position:fixed; bottom:12px; right:12px; background:var(--accent); color:#fff; padding:6px 10px; border-radius:6px; font-size:0.85rem; opacity:0; transition:opacity .25s; }
+  #saveStatus{
+    position:fixed; bottom:12px; right:12px; background:var(--accent); color:#fff;
+    padding:6px 10px; border-radius:8px; font-size:0.85rem; opacity:0; transition:opacity .25s;
+  }
 
-  /* Small tweaks */
-  .small label{flex:1}
-  .inline input[type="checkbox"], .inline input[type="radio"]{margin-right:2px}
-
+  @media (max-width:900px){
+    .header-grid{grid-template-columns:1fr 1fr}
+    .amount-wrap{grid-column:1 / -1}
+  }
   @media (max-width:720px){
     .policy-grid{grid-template-columns:1fr}
     .card-digit{width:60px}
-    .sub-options{margin-left:0}
-    .amount{min-width:140px}
   }
 </style>
 </head>
 <body>
 <main>
-  <h1>Credit Card Enrolment — Prototype (Amended)</h1>
+  <h1>Credit/Debit Card Enrolment — Prototype</h1>
 
   <!-- HEADER -->
   <section class="section header">
     <h2>Header</h2>
 
-    <!-- Cleaner alignment for main agree checkbox -->
-    <label class="inline" style="font-weight:600">
-      <input id="CCAgree" type="checkbox">
-      <span>I agree for recurring credit/debit card services</span>
-    </label>
+    <div class="header-agree">
+      <input id="CCAgree" type="checkbox" />
+      <div class="title">I agree for recurring credit/debit card services</div>
+    </div>
 
-    <!-- Sub-options, indented; checkboxes remain but behave mutually exclusive -->
-    <div class="sub-options">
-      <label class="inline">
-        <input id="Onetimecharge_alloutstanding" type="checkbox">
-        <span>Charge all outstanding</span>
-      </label>
+    <!-- Tidy grid: Left = Charge all, Middle = One-time, Right = Amount -->
+    <div class="header-grid">
+      <div class="header-item">
+        <label class="inline">
+          <input id="Onetimecharge_alloutstanding" type="checkbox" />
+          <span>Charge all outstanding</span>
+        </label>
+      </div>
 
-      <label class="inline">
-        <input id="Onetimecharge_tick" type="checkbox">
-        <span>Request one-time charge</span>
-      </label>
+      <div class="header-item">
+        <label class="inline">
+          <input id="Onetimecharge_tick" type="checkbox" />
+          <span>Request one-time charge</span>
+        </label>
+        <!-- Helper line -->
+      </div>
 
-      <label class="amount">
-        Amount (RM)
-        <input id="Onetimecharge_amt" type="number" step="0.01" placeholder="0.00" disabled />
-      </label>
+      <div class="amount-wrap">
+        <label>Amount (RM)
+          <input id="Onetimecharge_amt" type="number" step="0.01" placeholder="0.00" disabled />
+        </label>
+        <small class="muted">Enabled only when “Request one-time charge” is selected.</small>
+      </div>
     </div>
   </section>
 
@@ -125,18 +153,18 @@
       <small class="muted">Type 4 digits per box. Paste full 16-digit number — it will auto-split.</small>
     </div>
 
-    <div class="row small">
-      <label>Expiry MM
+    <div class="row">
+      <label style="flex:1">Expiry MM
         <select id="CardExpry_M_Select">
           <option value="">-- Month --</option>
         </select>
       </label>
-      <label>Expiry YY
+      <label style="flex:1">Expiry YY
         <select id="CardExpry_Y_Select">
           <option value="">-- Year --</option>
         </select>
       </label>
-      <label>Issuing Bank
+      <label style="flex:1">Issuing Bank
         <select id="CardBank_Select">
           <option value="">-- Select Bank --</option>
         </select>
@@ -157,16 +185,16 @@
       <button id="clearSig" class="secondary">Clear Signature</button>
     </div>
 
-    <div class="row small">
-      <label>Signer (Owner) Name
+    <div class="row">
+      <label style="flex:1">Signer (Owner) Name
         <input id="Sign_OwnerName" type="text">
       </label>
-      <label>Owner NRIC
+      <label style="flex:1">Owner NRIC
         <input id="Sign_OwnerNIRC" type="text">
       </label>
     </div>
 
-    <div class="row small">
+    <div class="row">
       <label>Sign Date (DD)
         <input id="Sign_Date" maxlength="2" inputmode="numeric">
       </label>
@@ -176,7 +204,7 @@
       <label>Sign Year (YYYY)
         <input id="Sign_Year" maxlength="4" inputmode="numeric">
       </label>
-      <label>State
+      <label style="flex:1">State
         <input id="Sign_State" type="text">
       </label>
     </div>
@@ -230,10 +258,10 @@ const MAX_POLICIES = 4;
 /* ---------- helpers ---------- */
 function $(id){return document.getElementById(id);}
 function safeSetText(form, name, text){
-  try{ form.getTextField(name).setText(String(text || "")); } catch(e){ /*console.warn(name, e)*/ }
+  try{ form.getTextField(name).setText(String(text || "")); } catch(e){ /* missing field ok */ }
 }
 function safeCheck(form, name, checked){
-  try{ const cb = form.getCheckBox(name); if (checked) cb.check(); else cb.uncheck(); } catch(e){ /*console.warn(name, e)*/ }
+  try{ const cb = form.getCheckBox(name); if (checked) cb.check(); else cb.uncheck(); } catch(e){ /* missing field ok */ }
 }
 
 /* ---------- Save indicator ---------- */
@@ -258,21 +286,20 @@ function autoBindSave(el){
     if(el.type === 'checkbox' || el.type === 'radio') el.checked = (saved === 'true');
     else el.value = saved;
   }
-  el.addEventListener(el.type === 'checkbox' || el.type === 'radio' ? 'change' : 'input', ()=> saveElValue(el));
+  el.addEventListener((el.type === 'checkbox' || el.type === 'radio') ? 'change' : 'input', ()=> saveElValue(el));
 }
 
-/* ---------- HEADER logic (alignment already handled via CSS) ---------- */
-const agreeChk = $("CCAgree");
+/* ---------- HEADER logic ---------- */
 const allOutstandingChk = $("Onetimecharge_alloutstanding");
 const oneTimeChk = $("Onetimecharge_tick");
 const oneTimeAmt = $("Onetimecharge_amt");
 
 function syncHeaderOptions(){
-  // Amount behavior
+  // Amount field enabled only when One-time is chosen AND "charge all" is not chosen.
   oneTimeAmt.disabled = !oneTimeChk.checked || allOutstandingChk.checked;
   if (oneTimeAmt.disabled){ oneTimeAmt.value = ""; localStorage.setItem("Onetimecharge_amt",""); }
 
-  // Mutual exclusivity (disable opposite & clear it)
+  // Mutually exclusive behavior between the two checkboxes (UI remains checkbox for PDF mimic)
   if (allOutstandingChk.checked){
     oneTimeChk.checked = false;
     oneTimeChk.disabled = true;
@@ -291,10 +318,11 @@ function syncHeaderOptions(){
   showSaveStatus();
 }
 
-[agreeChk, allOutstandingChk, oneTimeChk, oneTimeAmt].forEach(el=> autoBindSave(el));
+// Bind + restore
+["CCAgree","Onetimecharge_alloutstanding","Onetimecharge_tick","Onetimecharge_amt"].forEach(id=> autoBindSave($(id)));
 [allOutstandingChk, oneTimeChk].forEach(el=> el.addEventListener("change", syncHeaderOptions));
 
-/* ---------- SECTION A: Dynamic policies ---------- */
+/* ---------- SECTION A: Dynamic policies (Add/Remove like EPP) ---------- */
 const policiesContainer = $("policiesContainer");
 const addPolicyBtn = $("addPolicy");
 let policyCount = 0;
@@ -303,12 +331,16 @@ function relationshipOptionsHTML(selected=""){
   const opts = ["OWNSELF","SPOUSE","CHILDREN","PARENT","GRANDPARENT","SIBLING","COMPANY"];
   return opts.map(v=> `<option value="${v}" ${v===selected?"selected":""}>${v}</option>`).join("");
 }
+
 function createPolicyEntry(index){
   const wrap = document.createElement("div");
   wrap.className = "policy";
   wrap.dataset.index = index;
+
+  // Build inner HTML
   wrap.innerHTML = `
-    <h3>Policy Entry ${index}</h3>
+    <h3><span>Policy Entry ${index}</span> <button type="button" class="remove-btn" aria-label="Remove policy">Remove</button></h3>
+
     <label>Policy No.
       <input type="text" id="PolicyNo${index}" placeholder="PolicyNo${index}">
     </label>
@@ -322,7 +354,8 @@ function createPolicyEntry(index){
       </select>
     </label>
   `;
-  // Uppercase on Insured input + autosave
+
+  // Uppercase & autosave
   const insured = wrap.querySelector("#Insured"+index);
   insured.addEventListener("input", ()=>{ insured.value = insured.value.toUpperCase(); saveElValue(insured); });
 
@@ -331,30 +364,113 @@ function createPolicyEntry(index){
     const el = wrap.querySelector("#"+id); autoBindSave(el);
   });
 
-  // Also persist policyCount whenever a new one is added
-  localStorage.setItem("policyCount", policyCount);
+  // Restore saved values (if any)
+  const sp = localStorage.getItem("PolicyNo"+index); if(sp!==null) wrap.querySelector("#PolicyNo"+index).value = sp;
+  const si = localStorage.getItem("Insured"+index); if(si!==null) insured.value = si.toUpperCase();
+  const sr = localStorage.getItem("Relationship"+index); if(sr!==null) wrap.querySelector("#Relationship"+index).value = sr;
 
-  // Restore saved values for this policy (if any)
-  const savedPolicy = localStorage.getItem("PolicyNo"+index); if(savedPolicy!==null) wrap.querySelector("#PolicyNo"+index).value = savedPolicy;
-  const savedInsured = localStorage.getItem("Insured"+index); if(savedInsured!==null){ insured.value = savedInsured.toUpperCase(); }
-  const savedRel = localStorage.getItem("Relationship"+index); if(savedRel!==null) wrap.querySelector("#Relationship"+index).value = savedRel;
+  // Remove button
+  wrap.querySelector(".remove-btn").addEventListener("click", ()=>{
+    policiesContainer.removeChild(wrap);
+    policyCount = Math.max(0, policyCount - 1);
+    addPolicyBtn.disabled = policyCount >= MAX_POLICIES;
+    renumberPolicies(); // Keep IDs and PDF mapping contiguous like EPP
+    showSaveStatus();
+  });
 
   return wrap;
 }
+
 function addPolicy(){
   if(policyCount >= MAX_POLICIES) return;
   policyCount++;
-  policiesContainer.appendChild(createPolicyEntry(policyCount));
+  const node = createPolicyEntry(policyCount);
+  policiesContainer.appendChild(node);
   addPolicyBtn.disabled = policyCount >= MAX_POLICIES;
+  localStorage.setItem("policyCount", policyCount);
   showSaveStatus();
 }
-addPolicyBtn.addEventListener("click", ()=>{ addPolicy(); });
+
+// Renumber remaining cards so IDs/labels are contiguous (…PolicyNo1,2,3,4)
+function renumberPolicies(){
+  const cards = Array.from(policiesContainer.querySelectorAll(".policy"));
+  // Capture current values in DOM order
+  const snapshot = cards.map((card)=> {
+    const idx = card.dataset.index;
+    return {
+      el: card,
+      PolicyNo: card.querySelector("#PolicyNo"+idx)?.value || "",
+      Insured: card.querySelector("#Insured"+idx)?.value || "",
+      Relationship: card.querySelector("#Relationship"+idx)?.value || ""
+    };
+  });
+
+  // Clear localStorage keys for all old indices (avoid ghosts)
+  snapshot.forEach((_, i)=>{
+    const old = (cards[i].dataset.index);
+    ["PolicyNo","Insured","Relationship"].forEach(k => localStorage.removeItem(k+old));
+  });
+
+  // Reassign indices and IDs, restore values, and rebind autosave
+  snapshot.forEach((data, i)=>{
+    const newIndex = i+1;
+    const card = data.el;
+    card.dataset.index = newIndex;
+    // Update heading text
+    const titleSpan = card.querySelector("h3 span");
+    if(titleSpan) titleSpan.textContent = "Policy Entry " + newIndex;
+
+    // Update IDs on inputs/selects
+    const pn = card.querySelector(`[id^="PolicyNo"]`);
+    const iname = card.querySelector(`[id^="Insured"]`);
+    const rel = card.querySelector(`[id^="Relationship"]`);
+    pn.id = "PolicyNo"+newIndex;
+    pn.setAttribute("placeholder","PolicyNo"+newIndex);
+    iname.id = "Insured"+newIndex;
+    iname.setAttribute("placeholder","Insured"+newIndex);
+    rel.id = "Relationship"+newIndex;
+
+    // Rebind uppercase + autosave
+    iname.removeEventListener("input", iname._upperListener || (()=>{}));
+    const upperListener = ()=>{ iname.value = iname.value.toUpperCase(); saveElValue(iname); };
+    iname.addEventListener("input", upperListener);
+    iname._upperListener = upperListener;
+
+    [pn, rel].forEach(el=>{
+      el.replaceWith(el.cloneNode(true)); // remove previous listeners cleanly
+    });
+
+    // Requery after clone
+    const pn2 = card.querySelector("#PolicyNo"+newIndex);
+    const rel2 = card.querySelector("#Relationship"+newIndex);
+
+    // Restore captured values and save into new keys
+    pn2.value = data.PolicyNo || "";
+    iname.value = (data.Insured || "").toUpperCase();
+    rel2.value = data.Relationship || "";
+
+    autoBindSave(pn2);
+    autoBindSave(iname);
+    autoBindSave(rel2);
+
+    localStorage.setItem("PolicyNo"+newIndex, pn2.value);
+    localStorage.setItem("Insured"+newIndex, iname.value);
+    localStorage.setItem("Relationship"+newIndex, rel2.value);
+  });
+
+  // Update policyCount in storage
+  policyCount = snapshot.length;
+  localStorage.setItem("policyCount", policyCount);
+}
+
+/* Add policy button */
+addPolicyBtn.addEventListener("click", addPolicy);
 
 /* ---------- CARD details enhancements ---------- */
 // Name on card uppercase
 $("CardName").addEventListener("input", (e)=>{ e.target.value = e.target.value.toUpperCase(); saveElValue(e.target); });
 
-// Card number 4x inputs with auto-jump & paste split + autosave
+// Card number inputs with auto-jump & paste split + autosave
 const cardDigits = [ $("CardNo_1"), $("CardNo_2"), $("CardNo_3"), $("CardNo_4") ];
 cardDigits.forEach((el, idx)=>{
   autoBindSave(el);
@@ -373,7 +489,7 @@ cardDigits.forEach((el, idx)=>{
   });
 });
 
-// Expiry selects
+// Expiry selectors
 (function populateExpirySelectors(){
   const mmSel = $("CardExpry_M_Select");
   const months = [
@@ -400,7 +516,7 @@ cardDigits.forEach((el, idx)=>{
   autoBindSave(yySel);
 })();
 
-// Issuing bank dropdown
+// Issuing bank dropdown (uppercase)
 (function populateBanks(){
   const banks = [
     "MAYBANK","CIMB BANK","PUBLIC BANK","RHB BANK","HONG LEONG BANK","AMBANK",
@@ -446,16 +562,16 @@ canvas.addEventListener("touchmove",(e)=>{ e.preventDefault(); if(!drawing) retu
 canvas.addEventListener("touchend", ()=>drawing=false);
 $("clearSig").addEventListener("click", ()=>{ ctx.clearRect(0,0,canvas.width,canvas.height); });
 
-/* ---------- Restore saved values on load (including dynamic policies) ---------- */
+/* ---------- Restore on load ---------- */
 (function restoreAll(){
-  // Basic elements (checkboxes, radios, inputs, selects)
+  // Basic autosave bindings
   document.querySelectorAll("input,select,textarea").forEach(el=> autoBindSave(el));
 
   // Dynamic policies
-  const savedCount = parseInt(localStorage.getItem("policyCount")) || 1;
   policiesContainer.innerHTML = "";
   policyCount = 0;
-  for(let i=1;i<=Math.min(savedCount, MAX_POLICIES);i++){ addPolicy(); }
+  const savedCount = Math.max(1, Math.min(parseInt(localStorage.getItem("policyCount")) || 1, MAX_POLICIES));
+  for(let i=1;i<=savedCount;i++){ addPolicy(); }
 
   // Header sync after restore
   syncHeaderOptions();
@@ -466,7 +582,8 @@ $("clearSig").addEventListener("click", ()=>{ ctx.clearRect(0,0,canvas.width,can
 
 /* ---------- PDF helpers ---------- */
 function writeCardToPdf(form){
-  const combined = cardDigits.map(d => (d.value||"").padEnd(4,' ')).join('').slice(0,16);
+  const digits = [ $("CardNo_1"), $("CardNo_2"), $("CardNo_3"), $("CardNo_4") ];
+  const combined = digits.map(d => (d.value||"").padEnd(4,' ')).join('').slice(0,16);
   for(let i=0;i<16;i++){
     const field = `CardNo_${i+1}`;
     const ch = combined[i] && combined[i] !== ' ' ? combined[i] : "";
@@ -499,7 +616,7 @@ async function fillPDF(){
     safeCheck(form, "Onetimecharge_tick", $("Onetimecharge_tick").checked);
     safeSetText(form, "Onetimecharge_amt", $("Onetimecharge_amt").value || "");
 
-    // SECTION A — existing entries only
+    // SECTION A — existing entries only (contiguous after renumber)
     const created = policiesContainer.querySelectorAll(".policy");
     created.forEach(p => {
       const idx = p.dataset.index;
@@ -552,7 +669,7 @@ async function fillPDF(){
         const pngBytes = await fetch(sigDataUrl).then(r=>r.arrayBuffer());
         const png = await pdfDoc.embedPng(pngBytes);
         const pages = pdfDoc.getPages();
-        const pageIndex = Math.min(2, pages.length-1);
+        const pageIndex = Math.min(2, pages.length-1); // page 3 (index 2)
         const page = pages[pageIndex];
         page.drawImage(png, { x: 360, y: 90, width: 160, height: 50 });
       }catch(e){ /* ignore embed errors */ }
@@ -575,7 +692,6 @@ async function fillPDF(){
 
 /* ---------- Reset All ---------- */
 function resetAll(){
-  // Clear our keys (safer than localStorage.clear if you share storage with other pages)
   const keys = Object.keys(localStorage);
   keys.forEach(k=>{
     if(
