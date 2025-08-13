@@ -220,33 +220,107 @@
     </div>
   </section>
 
-<section class="section">
-    <h2>Section C - Third Party / Source</h2>
+<section class="section" id="sectionC">
+  <h2>Section C - Third Party / Source</h2>
 
-    <label class="inline"><input id="ThirdPP_Yes" type="checkbox"> <span>Third party payor?</span></label>
-    <label>Third Party Name <input id="ThirdPP_Name" type="text"></label>
-    <label>Third Party Email <input id="ThirdPP_Email" type="email"></label>
+  <!-- Step 1 -->
+  <label class="inline">
+    <input id="ThirdPP_Yes" type="checkbox">
+    <span>Payment by Third Party Payor (other than Policyowner)</span>
+  </label>
 
-    <h3>Source of Funds (select any)</h3>
+  <!-- Step 2 (hidden until Step 1 is checked) -->
+  <div id="thirdPP_ic_wrap" style="display:none; margin-top:8px;">
+    <label class="inline">
+      <input id="ThirdPP_SubmittedNRIC" type="checkbox">
+      <span>Prepare IC Copy to be submitted together with this form</span>
+    </label>
+  </div>
+
+  <!-- Step 3 fields (hidden until Step 2 is checked) -->
+  <div id="thirdPP_fields" style="display:none; margin-top:14px;">
+    <label>Third Party Payor’s Name
+      <input id="ThirdPP_Name" type="text">
+    </label>
+
+    <label>Date of Birth</label>
+    <div class="row">
+      <select id="Text28"></select>
+      <select id="Text29"></select>
+      <select id="Text30"></select>
+    </div>
+
+    <label>IC No.
+      <input id="ThirdPP_NIRC" type="text">
+    </label>
+    <label>Nationality
+      <input id="ThirdPP_Nationality" type="text">
+    </label>
+    <label>Correspondence Address Line 1
+      <input id="ThirdPP_CorrespAdd_Line1" type="text">
+    </label>
+    <label>Correspondence Address Line 2
+      <input id="ThirdPP_CorrespAdd_Line2" type="text">
+    </label>
+    <label>Postcode
+      <input id="ThirdPP_CorrrepAdd_Postcode" type="text">
+    </label>
+    <label>Country
+      <input id="ThirdPP_CorrespAdd_Country" type="text">
+    </label>
+    <label>Email Address
+      <input id="ThirdPP_Email" type="email">
+    </label>
+    <label>Mobile No.
+      <input id="ThirdPP_Phone" type="tel">
+    </label>
+    <label>Occupation
+      <input id="ThirdPP_Occupation" type="text">
+    </label>
+    <label>Name of Employer
+      <input id="ThirdPP_Employer" type="text">
+    </label>
+    <label>Nature of Business
+      <input id="ThirdPP_NatureBusiness" type="text">
+    </label>
+    <label>Monthly Income (RM)
+      <input id="ThirdPP_Income" type="number" step="0.01">
+    </label>
+
+    <h3>Source of Funds</h3>
     <label class="inline"><input id="ThirdPP_SourceFund_Self" type="checkbox"> <span>Self</span></label>
     <label class="inline"><input id="ThirdPP_SourceFund_Parent" type="checkbox"> <span>Parent(s)</span></label>
     <label class="inline"><input id="ThirdPP_SourceFund_Spouse" type="checkbox"> <span>Spouse</span></label>
-    <label>If others specify <input id="ThirdPP_SourceFund_Others_Write" type="text"></label>
     <label class="inline"><input id="ThirdPP_SourceFund_Others" type="checkbox"> <span>Others</span></label>
+    <label>If others specify
+      <input id="ThirdPP_SourceFund_Others_Write" type="text">
+    </label>
 
-    <h3>Source of Wealth (select any)</h3>
+    <h3>Source of Wealth</h3>
     <label class="inline"><input id="ThirdPP_SourceWealth_EmployBus" type="checkbox"> <span>Employment/Business</span></label>
     <label class="inline"><input id="ThirdPP_SourceWealth_Invest" type="checkbox"> <span>Investment</span></label>
     <label class="inline"><input id="ThirdPP_SourceWealth_Inherit" type="checkbox"> <span>Inheritance</span></label>
     <label class="inline"><input id="ThirdPP_SourceWealth_Savings" type="checkbox"> <span>Savings</span></label>
     <label class="inline"><input id="ThirdPP_SourceWealth_Parents" type="checkbox"> <span>Parents</span></label>
     <label class="inline"><input id="ThirdPP_SourceWealth_Spouse" type="checkbox"> <span>Spouse</span></label>
-    <label>If others specify <input id="ThirdPP_SourceWealth_Others_Write" type="text"></label>
     <label class="inline"><input id="ThirdPP_SourceWealth_Others" type="checkbox"> <span>Others</span></label>
-  </section>
+    <label>If others specify
+      <input id="ThirdPP_SourceWealth_Others_Write" type="text">
+    </label>
+  </div>
+</section>
+
+<!-- Section D PDPA -->
+<section class="section" id="sectionD">
+  <h2>Section D - PDPA</h2>
+  <label class="inline">
+    <input id="PDPA" type="checkbox">
+    <span>I have read and agree to the PDPA terms</span>
+  </label>
+</section>
 
   <section class="section">
-    <h2>Section D - Signature</h2>
+    <h2>Section E - Signature</h2>
 
     <div class="row">
       <label style="flex:1">Signer (Owner) Name
