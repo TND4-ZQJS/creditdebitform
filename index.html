@@ -718,6 +718,52 @@ canvas.addEventListener("touchmove",(e)=>{ e.preventDefault(); if(!drawing) retu
 canvas.addEventListener("touchend", ()=>drawing=false);
 $("clearSig").addEventListener("click", ()=>{ ctx.clearRect(0,0,canvas.width,canvas.height); });
 
+// Populate DOB dropdowns for Third Party
+(function populateDOB(){
+  const daySel = $("Text28");
+  daySel.innerHTML = '<option value="">-- Day --</option>';
+  for(let d=1; d<=31; d++){
+    const val = String(d).padStart(2,'0');
+    daySel.innerHTML += `<option value="${val}">${val}</option>`;
+  }
+  autoBindSave(daySel);
+
+  const monthSel = $("Text29");
+  monthSel.innerHTML = '<option value="">-- Month --</option>';
+  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  months.forEach((m,i)=>{
+    const val = String(i+1).padStart(2,'0');
+    monthSel.innerHTML += `<option value="${val}">${val} - ${m}</option>`;
+  });
+  autoBindSave(monthSel);
+
+  const yearSel = $("Text30");
+  yearSel.innerHTML = '<option value="">-- Year --</option>';
+  for(let y=2025; y<=2030; y++){
+    yearSel.innerHTML += `<option value="${y}">${y}</option>`;
+  }
+  autoBindSave(yearSel);
+})();
+
+  // Show/hide logic for Section C
+function updateThirdPPUI(){
+  $("thirdPP_ic_wrap").style.display = $("ThirdPP_Yes").checked ? "block" : "none";
+  $("thirdPP_fields").style.display = ($("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked) ? "block" : "none";
+}
+
+// Bind events for toggling
+["ThirdPP_Yes","ThirdPP_SubmittedNRIC"].forEach(id=>{
+  const el = $(id);
+  autoBindSave(el); // so state is saved to localStorage
+  el.addEventListener("change", ()=>{
+    updateThirdPPUI();
+    saveElValue(el);
+  });
+});
+
+// Run once on page load to restore correct visibility
+updateThirdPPUI();
+  
 /* ---------- Restore on load ---------- */
 (function restoreAll(){
   document.querySelectorAll("input,select,textarea").forEach(el=> {
@@ -822,6 +868,33 @@ async function fillPDF(){
     safeSetText(form, "Sign_Month", $("Sign_Month").value || "");
     safeSetText(form, "Sign_Year", $("Sign_Year").value || "");
     safeSetText(form, "Sign_State", $("Sign_State").value || "");
+
+    // THIRD PARTY SECTION
+safeCheck(form, "ThirdPP_Yes", $("ThirdPP_Yes").checked);
+safeCheck(form, "ThirdPP_SubmittedNRIC", $("ThirdPP_SubmittedNRIC").checked);
+
+if ($("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked) {
+  [
+    "ThirdPP_Name","ThirdPP_NIRC","ThirdPP_Nationality","ThirdPP_CorrespAdd_Line1",
+    "ThirdPP_CorrespAdd_Line2","ThirdPP_CorrrepAdd_Postcode","ThirdPP_CorrespAdd_Country",
+    "ThirdPP_Email","ThirdPP_Phone","ThirdPP_Occupation","ThirdPP_Employer",
+    "ThirdPP_NatureBusiness","ThirdPP_Income",
+    "ThirdPP_SourceFund_Others_Write","ThirdPP_SourceWealth_Others_Write"
+  ].forEach(id=> safeSetText(form, id, $(id).value || ""));
+
+  safeSetText(form, "Text28", $("Text28").value || "");
+  safeSetText(form, "Text29", $("Text29").value || "");
+  safeSetText(form, "Text30", $("Text30").value || "");
+
+  [
+    "ThirdPP_SourceFund_Self","ThirdPP_SourceFund_Parent","ThirdPP_SourceFund_Spouse","ThirdPP_SourceFund_Others",
+    "ThirdPP_SourceWealth_EmployBus","ThirdPP_SourceWealth_Invest","ThirdPP_SourceWealth_Inherit","ThirdPP_SourceWealth_Savings",
+    "ThirdPP_SourceWealth_Parents","ThirdPP_SourceWealth_Spouse","ThirdPP_SourceWealth_Others"
+  ].forEach(id=> safeCheck(form, id, $(id).checked));
+}
+
+// PDPA
+safeCheck(form, "PDPA", $("PDPA").checked);
 
     // Signature image embed (page 3 if exists; else last page)
     const sigDataUrl = canvas.toDataURL("image/png");
