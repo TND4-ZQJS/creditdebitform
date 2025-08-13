@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Credit/Debit Card Enrolment — Single File</title>
+<title>Credit/Debit Card Enrolment — Single File (Fixed One-time Logic)</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
   :root{
@@ -91,9 +91,9 @@
       <div class="title">I agree for recurring credit/debit card services</div>
     </div>
 
-    <!-- Tidy grid: Left = Charge all, Middle = One-time, Right = Amount -->
+    <!-- Grid: column1 = (Charge All) hidden unless One-time checked; column2 = Request one-time (always visible) ; col3 = amount (also hidden unless One-time checked) -->
     <div class="header-grid">
-      <div class="header-item">
+      <div class="header-item" id="alloutstandingContainer">
         <label class="inline">
           <input id="Onetimecharge_alloutstanding" type="checkbox" />
           <span>Charge all outstanding</span>
@@ -105,14 +105,13 @@
           <input id="Onetimecharge_tick" type="checkbox" />
           <span>Request one-time charge</span>
         </label>
-        <!-- Helper line -->
       </div>
 
-      <div class="amount-wrap">
+      <div class="amount-wrap" id="amountContainer">
         <label>Amount (RM)
           <input id="Onetimecharge_amt" type="number" step="0.01" placeholder="0.00" disabled />
         </label>
-        <small class="muted">Enabled only when “Request one-time charge” is selected.</small>
+        <small class="muted">Enabled only when “Request one-time charge” is selected and "Charge all outstanding" is not selected.</small>
       </div>
     </div>
   </section>
@@ -289,38 +288,80 @@ function autoBindSave(el){
   el.addEventListener((el.type === 'checkbox' || el.type === 'radio') ? 'change' : 'input', ()=> saveElValue(el));
 }
 
-/* ---------- HEADER logic ---------- */
+/* ---------- HEADER logic (fixed) ---------- */
 const allOutstandingChk = $("Onetimecharge_alloutstanding");
 const oneTimeChk = $("Onetimecharge_tick");
 const oneTimeAmt = $("Onetimecharge_amt");
+const alloutContainer = $("alloutstandingContainer");
+const amountContainer = $("amountContainer");
 
-function syncHeaderOptions(){
-  // Amount field enabled only when One-time is chosen AND "charge all" is not chosen.
-  oneTimeAmt.disabled = !oneTimeChk.checked || allOutstandingChk.checked;
-  if (oneTimeAmt.disabled){ oneTimeAmt.value = ""; localStorage.setItem("Onetimecharge_amt",""); }
-
-  // Mutually exclusive behavior between the two checkboxes (UI remains checkbox for PDF mimic)
-  if (allOutstandingChk.checked){
-    oneTimeChk.checked = false;
-    oneTimeChk.disabled = true;
-    localStorage.setItem("Onetimecharge_tick", false);
-  } else {
-    oneTimeChk.disabled = false;
-  }
-
+function updateOneTimeUI(){
   if (oneTimeChk.checked){
+    // show sub-options
+    alloutContainer.style.display = '';
+    amountContainer.style.display = '';
+    allOutstandingChk.disabled = false;
+    // if charge-all selected, amount disabled
+    oneTimeAmt.disabled = !!allOutstandingChk.checked;
+    if (allOutstandingChk.checked){
+      oneTimeAmt.value = "";
+      localStorage.setItem("Onetimecharge_amt",""); // clear saved amount because UI prevents amount
+    }
+  } else {
+    // hide & clear sub-options
+    alloutContainer.style.display = 'none';
+    amountContainer.style.display = 'none';
     allOutstandingChk.checked = false;
     allOutstandingChk.disabled = true;
+    oneTimeAmt.value = "";
+    oneTimeAmt.disabled = true;
     localStorage.setItem("Onetimecharge_alloutstanding", false);
-  } else {
-    allOutstandingChk.disabled = false;
+    localStorage.setItem("Onetimecharge_amt", "");
   }
   showSaveStatus();
 }
 
-// Bind + restore
-["CCAgree","Onetimecharge_alloutstanding","Onetimecharge_tick","Onetimecharge_amt"].forEach(id=> autoBindSave($(id)));
-[allOutstandingChk, oneTimeChk].forEach(el=> el.addEventListener("change", syncHeaderOptions));
+// If user toggles Charge All: disable/clear amount
+allOutstandingChk.addEventListener('change', ()=>{
+  if (allOutstandingChk.checked){
+    oneTimeAmt.value = "";
+    oneTimeAmt.disabled = true;
+    saveElValue(oneTimeAmt); // clear saved amount
+  } else {
+    // only enable amount if oneTime checked
+    oneTimeAmt.disabled = !oneTimeChk.checked;
+  }
+  saveElValue(allOutstandingChk);
+  showSaveStatus();
+});
+
+// If user types amount: auto uncheck & disable Charge All
+oneTimeAmt.addEventListener('input', ()=>{
+  const val = (oneTimeAmt.value || "").toString().trim();
+  const hasVal = val !== "" && Number(val) > 0;
+  if (hasVal){
+    allOutstandingChk.checked = false;
+    allOutstandingChk.disabled = true;
+    saveElValue(allOutstandingChk);
+  } else {
+    // If no amount and oneTime is checked, re-enable charge-all
+    if (oneTimeChk.checked) allOutstandingChk.disabled = false;
+  }
+  saveElValue(oneTimeAmt);
+  showSaveStatus();
+});
+
+// Bind + restore main header controls
+["CCAgree","Onetimecharge_alloutstanding","Onetimecharge_tick","Onetimecharge_amt"].forEach(id=>{
+  const el = $(id);
+  if(el) autoBindSave(el);
+});
+
+// show/hide whenever request-one-time toggles
+oneTimeChk.addEventListener('change', ()=>{
+  updateOneTimeUI();
+  saveElValue(oneTimeChk);
+});
 
 /* ---------- SECTION A: Dynamic policies (Add/Remove like EPP) ---------- */
 const policiesContainer = $("policiesContainer");
@@ -361,7 +402,7 @@ function createPolicyEntry(index){
 
   // Autosave for fields inside
   ["PolicyNo"+index, "Relationship"+index].forEach(id=>{
-    const el = wrap.querySelector("#"+id); autoBindSave(el);
+    const el = wrap.querySelector("#"+id); if(el) autoBindSave(el);
   });
 
   // Restore saved values (if any)
@@ -394,18 +435,17 @@ function addPolicy(){
 // Renumber remaining cards so IDs/labels are contiguous (…PolicyNo1,2,3,4)
 function renumberPolicies(){
   const cards = Array.from(policiesContainer.querySelectorAll(".policy"));
-  // Capture current values in DOM order
   const snapshot = cards.map((card)=> {
     const idx = card.dataset.index;
     return {
       el: card,
-      PolicyNo: card.querySelector("#PolicyNo"+idx)?.value || "",
-      Insured: card.querySelector("#Insured"+idx)?.value || "",
-      Relationship: card.querySelector("#Relationship"+idx)?.value || ""
+      PolicyNo: card.querySelector(`#PolicyNo${idx}`)?.value || "",
+      Insured: card.querySelector(`#Insured${idx}`)?.value || "",
+      Relationship: card.querySelector(`#Relationship${idx}`)?.value || ""
     };
   });
 
-  // Clear localStorage keys for all old indices (avoid ghosts)
+  // Clear localStorage keys for all old indices
   snapshot.forEach((_, i)=>{
     const old = (cards[i].dataset.index);
     ["PolicyNo","Insured","Relationship"].forEach(k => localStorage.removeItem(k+old));
@@ -573,8 +613,8 @@ $("clearSig").addEventListener("click", ()=>{ ctx.clearRect(0,0,canvas.width,can
   const savedCount = Math.max(1, Math.min(parseInt(localStorage.getItem("policyCount")) || 1, MAX_POLICIES));
   for(let i=1;i<=savedCount;i++){ addPolicy(); }
 
-  // Header sync after restore
-  syncHeaderOptions();
+  // Header sync after restore (uses restored oneTimeChk state)
+  updateOneTimeUI();
 
   // Ensure CardName is uppercase on load
   const cn = $("CardName"); if(cn.value) cn.value = cn.value.toUpperCase();
@@ -612,6 +652,7 @@ async function fillPDF(){
 
     // HEADER
     safeCheck(form, "CCAgree", $("CCAgree").checked);
+    // Only include the sub-options if request-one-time is checked (the form will set checkboxes/amt only from DOM)
     safeCheck(form, "Onetimecharge_alloutstanding", $("Onetimecharge_alloutstanding").checked);
     safeCheck(form, "Onetimecharge_tick", $("Onetimecharge_tick").checked);
     safeSetText(form, "Onetimecharge_amt", $("Onetimecharge_amt").value || "");
@@ -723,7 +764,7 @@ function resetAll(){
   addPolicyBtn.disabled = false;
   addPolicy();
 
-  syncHeaderOptions();
+  updateOneTimeUI();
   showSaveStatus();
 }
 
