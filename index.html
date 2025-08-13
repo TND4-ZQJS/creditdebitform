@@ -1,163 +1,619 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Credit Card Form Filler — Prototype</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="style.css" />
+<meta charset="utf-8" />
+<title>Credit Card Enrolment — Amended (Single File)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root{--bg:#f6f7f9;--card:#fff;--accent:#007aff;--muted:#666;}
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial;margin:18px;background:var(--bg);color:#111}
+  main{max-width:980px;margin:0 auto;background:var(--card);padding:18px;border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,0.06)}
+  h1{margin-top:0;font-size:1.25rem}
+  .section{background:#fbfbfd;border:1px solid #eee;padding:12px;border-radius:8px;margin:12px 0}
+  .section h2{margin:0 0 8px 0}
+  label{display:block;margin:8px 0;font-size:0.95rem}
+  input[type=text],input[type=email],input[type=number],input[type=tel],select,textarea{
+    width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-top:6px;font-size:1rem;
+  }
+  .inline{display:inline-flex;align-items:center;gap:8px}
+  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:8px 0}
+  .header-row{align-items:center}
+  .amount{display:flex;flex-direction:column;min-width:180px}
+  .muted{color:var(--muted);font-size:0.85rem}
+  button{background:var(--accent);color:#fff;border:0;padding:10px 14px;border-radius:8px;cursor:pointer}
+  button.secondary{background:#999}
+  .actions{display:flex;gap:12px;align-items:center}
+
+  /* Card number */
+  .card-number-block .card-number-inputs{display:flex;gap:8px;margin-top:8px}
+  .card-digit{width:80px;padding:8px;border-radius:8px;border:1px solid #ddd;text-align:center;font-size:1.05rem}
+  .card-digit:focus{outline:2px solid rgba(0,122,255,0.15)}
+
+  /* Policy grid */
+  .policy-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .policy{background:#fff;padding:10px;border-radius:8px;border:1px solid #eee}
+  .policy h3{margin:0 0 8px 0;font-size:0.95rem}
+
+  /* Signature */
+  canvas{width:100%;height:150px;border-radius:8px;border:1px solid #ddd;background:#fff}
+
+  /* Header indent for sub-options */
+  .sub-options{margin-left:28px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+
+  /* Save indicator */
+  #saveStatus{ position:fixed; bottom:12px; right:12px; background:var(--accent); color:#fff; padding:6px 10px; border-radius:6px; font-size:0.85rem; opacity:0; transition:opacity .25s; }
+
+  /* Small tweaks */
+  .small label{flex:1}
+  .inline input[type="checkbox"], .inline input[type="radio"]{margin-right:2px}
+
+  @media (max-width:720px){
+    .policy-grid{grid-template-columns:1fr}
+    .card-digit{width:60px}
+    .sub-options{margin-left:0}
+    .amount{min-width:140px}
+  }
+</style>
 </head>
 <body>
-  <main>
-    <h1>Credit Card Enrolment — Prototype</h1>
+<main>
+  <h1>Credit Card Enrolment — Prototype (Amended)</h1>
 
-    <!-- HEADER -->
-    <section class="section header">
-      <h2>Header</h2>
-      <label class="row inline">
-        <input id="CCAgree" type="checkbox">I agree for recurring credit/debit card services
+  <!-- HEADER -->
+  <section class="section header">
+    <h2>Header</h2>
+
+    <!-- Cleaner alignment for main agree checkbox -->
+    <label class="inline" style="font-weight:600">
+      <input id="CCAgree" type="checkbox">
+      <span>I agree for recurring credit/debit card services</span>
+    </label>
+
+    <!-- Sub-options, indented; checkboxes remain but behave mutually exclusive -->
+    <div class="sub-options">
+      <label class="inline">
+        <input id="Onetimecharge_alloutstanding" type="checkbox">
+        <span>Charge all outstanding</span>
       </label>
 
-      <div class="row header-row">
-        <label class="inline">
-          <input id="Onetimecharge_alloutstanding" type="checkbox"> Charge all outstanding
-        </label>
-
-        <label class="inline">
-          <input id="Onetimecharge_tick" type="checkbox"> Request one-time charge
-        </label>
-
-        <label class="amount">
-          Amount (RM)
-          <input id="Onetimecharge_amt" type="number" step="0.01" disabled placeholder="0.00" />
-        </label>
-      </div>
-    </section>
-
-    <!-- SECTION A: Policy Entries -->
-    <section class="section" id="sectionA">
-      <h2>Section A — Policy Entries</h2>
-
-      <div id="policiesContainer"></div>
-
-      <div class="row">
-        <button id="addPolicy">+ Add Another Policy</button>
-        <small class="muted">Up to 4 policies</small>
-      </div>
-    </section>
-
-    <!-- CARD DETAILS -->
-    <section class="section">
-      <h2>Card Details</h2>
-
-      <label>Name on Card
-        <input id="CardName" type="text" placeholder="As printed on card">
+      <label class="inline">
+        <input id="Onetimecharge_tick" type="checkbox">
+        <span>Request one-time charge</span>
       </label>
 
-      <div class="row">
-        <label class="inline"><input name="cardType" id="CC_Tick" type="radio"> Credit Card</label>
-        <label class="inline"><input name="cardType" id="DebitC_Tick" type="radio"> Debit Card</label>
+      <label class="amount">
+        Amount (RM)
+        <input id="Onetimecharge_amt" type="number" step="0.01" placeholder="0.00" disabled />
+      </label>
+    </div>
+  </section>
+
+  <!-- SECTION A: Policy Entries -->
+  <section class="section" id="sectionA">
+    <h2>Section A — Policy Entries</h2>
+
+    <div id="policiesContainer" class="policy-grid"></div>
+
+    <div class="row">
+      <button id="addPolicy">+ Add Another Policy</button>
+      <small class="muted">Up to 4 policies</small>
+    </div>
+  </section>
+
+  <!-- CARD DETAILS -->
+  <section class="section">
+    <h2>Card Details</h2>
+
+    <label>Name on Card
+      <input id="CardName" type="text" placeholder="AS PRINTED ON CARD">
+    </label>
+
+    <div class="row">
+      <label class="inline"><input name="cardType" id="CC_Tick" type="radio"> Credit Card</label>
+      <label class="inline"><input name="cardType" id="DebitC_Tick" type="radio"> Debit Card</label>
+    </div>
+
+    <div class="card-number-block">
+      <label>Card Number</label>
+      <div class="card-number-inputs">
+        <input class="card-digit" id="CardNo_1" maxlength="4" inputmode="numeric" pattern="\d*">
+        <input class="card-digit" id="CardNo_2" maxlength="4" inputmode="numeric" pattern="\d*">
+        <input class="card-digit" id="CardNo_3" maxlength="4" inputmode="numeric" pattern="\d*">
+        <input class="card-digit" id="CardNo_4" maxlength="4" inputmode="numeric" pattern="\d*">
       </div>
+      <small class="muted">Type 4 digits per box. Paste full 16-digit number — it will auto-split.</small>
+    </div>
 
-      <div class="card-number-block">
-        <label>Card Number</label>
-        <div class="card-number-inputs">
-          <input class="card-digit" id="CardNo_1" maxlength="4" inputmode="numeric" pattern="\d*">
-          <input class="card-digit" id="CardNo_2" maxlength="4" inputmode="numeric" pattern="\d*">
-          <input class="card-digit" id="CardNo_3" maxlength="4" inputmode="numeric" pattern="\d*">
-          <input class="card-digit" id="CardNo_4" maxlength="4" inputmode="numeric" pattern="\d*">
-        </div>
-        <small class="muted">Type 4 digits per box. Paste full 16-digit number — it will auto-split.</small>
-      </div>
+    <div class="row small">
+      <label>Expiry MM
+        <select id="CardExpry_M_Select">
+          <option value="">-- Month --</option>
+        </select>
+      </label>
+      <label>Expiry YY
+        <select id="CardExpry_Y_Select">
+          <option value="">-- Year --</option>
+        </select>
+      </label>
+      <label>Issuing Bank
+        <select id="CardBank_Select">
+          <option value="">-- Select Bank --</option>
+        </select>
+      </label>
+    </div>
 
-      <div class="row small">
-        <label>Expiry MM
-          <input id="CardExpry_M" maxlength="2" inputmode="numeric" placeholder="MM">
-        </label>
-        <label>Expiry YY
-          <input id="CardExpry_Y" maxlength="2" inputmode="numeric" placeholder="YY">
-        </label>
-        <label>Issuing Bank
-          <input id="CardBank" type="text">
-        </label>
-      </div>
+    <div class="row">
+      <label class="inline"><input name="brand" id="Visa_Tick" type="radio"> Visa</label>
+      <label class="inline"><input name="brand" id="Master_Tick" type="radio"> Master</label>
+    </div>
+  </section>
 
-      <div class="row">
-        <label class="inline"><input name="brand" id="Visa_Tick" type="radio"> Visa</label>
-        <label class="inline"><input name="brand" id="Master_Tick" type="radio"> Master</label>
-      </div>
-    </section>
+  <!-- SIGNATURE -->
+  <section class="section">
+    <h2>Signature</h2>
+    <canvas id="signatureCanvas"></canvas>
+    <div class="row">
+      <button id="clearSig" class="secondary">Clear Signature</button>
+    </div>
 
-    <!-- SIGNATURE -->
-    <section class="section">
-      <h2>Signature</h2>
-      <canvas id="signatureCanvas"></canvas>
-      <div class="row">
-        <button id="clearSig" class="secondary">Clear Signature</button>
-      </div>
+    <div class="row small">
+      <label>Signer (Owner) Name
+        <input id="Sign_OwnerName" type="text">
+      </label>
+      <label>Owner NRIC
+        <input id="Sign_OwnerNIRC" type="text">
+      </label>
+    </div>
 
-      <div class="row small">
-        <label>Signer (Owner) Name
-          <input id="Sign_OwnerName" type="text">
-        </label>
-        <label>Owner NRIC
-          <input id="Sign_OwnerNIRC" type="text">
-        </label>
-      </div>
+    <div class="row small">
+      <label>Sign Date (DD)
+        <input id="Sign_Date" maxlength="2" inputmode="numeric">
+      </label>
+      <label>Sign Month
+        <input id="Sign_Month" maxlength="2" inputmode="numeric">
+      </label>
+      <label>Sign Year (YYYY)
+        <input id="Sign_Year" maxlength="4" inputmode="numeric">
+      </label>
+      <label>State
+        <input id="Sign_State" type="text">
+      </label>
+    </div>
+  </section>
 
-      <div class="row small">
-        <label>Sign Date (DD)
-          <input id="Sign_Date" maxlength="2" inputmode="numeric">
-        </label>
-        <label>Sign Month
-          <input id="Sign_Month" maxlength="2" inputmode="numeric">
-        </label>
-        <label>Sign Year (YYYY)
-          <input id="Sign_Year" maxlength="4" inputmode="numeric">
-        </label>
-        <label>State
-          <input id="Sign_State" type="text">
-        </label>
-      </div>
-    </section>
+  <!-- THIRD PARTY -->
+  <section class="section">
+    <h2>Third Party / Source</h2>
 
-    <!-- THIRD PARTY -->
-    <section class="section">
-      <h2>Third Party / Source</h2>
+    <label class="inline"><input id="ThirdPP_Yes" type="checkbox"> <span>Third party payor?</span></label>
+    <label>Third Party Name <input id="ThirdPP_Name" type="text"></label>
+    <label>Third Party Email <input id="ThirdPP_Email" type="email"></label>
 
-      <label><input id="ThirdPP_Yes" type="checkbox"> Third party payor?</label>
-      <label>Third Party Name <input id="ThirdPP_Name" type="text"></label>
-      <label>Third Party Email <input id="ThirdPP_Email" type="email"></label>
+    <h3>Source of Funds (select any)</h3>
+    <label class="inline"><input id="ThirdPP_SourceFund_Self" type="checkbox"> <span>Self</span></label>
+    <label class="inline"><input id="ThirdPP_SourceFund_Parent" type="checkbox"> <span>Parent(s)</span></label>
+    <label class="inline"><input id="ThirdPP_SourceFund_Spouse" type="checkbox"> <span>Spouse</span></label>
+    <label>If others specify <input id="ThirdPP_SourceFund_Others_Write" type="text"></label>
+    <label class="inline"><input id="ThirdPP_SourceFund_Others" type="checkbox"> <span>Others</span></label>
 
-      <h3>Source of Funds (select any)</h3>
-      <label><input id="ThirdPP_SourceFund_Self" type="checkbox"> Self</label>
-      <label><input id="ThirdPP_SourceFund_Parent" type="checkbox"> Parent(s)</label>
-      <label><input id="ThirdPP_SourceFund_Spouse" type="checkbox"> Spouse</label>
-      <label><input id="ThirdPP_SourceFund_Others" type="checkbox"> Others</label>
-      <label>If others specify <input id="ThirdPP_SourceFund_Others_Write" type="text"></label>
+    <h3>Source of Wealth (select any)</h3>
+    <label class="inline"><input id="ThirdPP_SourceWealth_EmployBus" type="checkbox"> <span>Employment/Business</span></label>
+    <label class="inline"><input id="ThirdPP_SourceWealth_Invest" type="checkbox"> <span>Investment</span></label>
+    <label class="inline"><input id="ThirdPP_SourceWealth_Inherit" type="checkbox"> <span>Inheritance</span></label>
+    <label class="inline"><input id="ThirdPP_SourceWealth_Savings" type="checkbox"> <span>Savings</span></label>
+    <label class="inline"><input id="ThirdPP_SourceWealth_Parents" type="checkbox"> <span>Parents</span></label>
+    <label class="inline"><input id="ThirdPP_SourceWealth_Spouse" type="checkbox"> <span>Spouse</span></label>
+    <label>If others specify <input id="ThirdPP_SourceWealth_Others_Write" type="text"></label>
+    <label class="inline"><input id="ThirdPP_SourceWealth_Others" type="checkbox"> <span>Others</span></label>
+  </section>
 
-      <h3>Source of Wealth (select any)</h3>
-      <label><input id="ThirdPP_SourceWealth_EmployBus" type="checkbox"> Employment/Business</label>
-      <label><input id="ThirdPP_SourceWealth_Invest" type="checkbox"> Investment</label>
-      <label><input id="ThirdPP_SourceWealth_Inherit" type="checkbox"> Inheritance</label>
-      <label><input id="ThirdPP_SourceWealth_Savings" type="checkbox"> Savings</label>
-      <label><input id="ThirdPP_SourceWealth_Parents" type="checkbox"> Parents</label>
-      <label><input id="ThirdPP_SourceWealth_Spouse" type="checkbox"> Spouse</label>
-      <label><input id="ThirdPP_SourceWealth_Others" type="checkbox"> Others</label>
-      <label>If others specify <input id="ThirdPP_SourceWealth_Others_Write" type="text"></label>
-    </section>
+  <!-- ACTIONS -->
+  <section class="section actions">
+    <button id="generate">Generate PDF</button>
+    <button id="resetAll" class="secondary">Reset All</button>
+  </section>
 
-    <!-- ACTIONS -->
-    <section class="section actions">
-      <button id="generate">Generate PDF</button>
-      <button id="resetAll" class="secondary">Reset All</button>
-    </section>
+  <footer>
+    <small>Make sure <code>Credit Card Enrolment Form_LF4092_200524_fillable.pdf</code> is in the same folder.</small>
+  </footer>
+</main>
 
-    <footer>
-      <small>Make sure <code>Credit Card Enrolment Form_LF4092_200524_fillable.pdf</code> is in the same folder.</small>
-    </footer>
-  </main>
+<div id="saveStatus">Saved</div>
 
-  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
-  <script src="script.js"></script>
+<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+<script>
+/* ---------- CONFIG ---------- */
+const PDF_FILENAME = "Credit Card Enrolment Form_LF4092_200524_fillable.pdf";
+const MAX_POLICIES = 4;
+
+/* ---------- helpers ---------- */
+function $(id){return document.getElementById(id);}
+function safeSetText(form, name, text){
+  try{ form.getTextField(name).setText(String(text || "")); } catch(e){ /*console.warn(name, e)*/ }
+}
+function safeCheck(form, name, checked){
+  try{ const cb = form.getCheckBox(name); if (checked) cb.check(); else cb.uncheck(); } catch(e){ /*console.warn(name, e)*/ }
+}
+
+/* ---------- Save indicator ---------- */
+const saveStatusEl = $("saveStatus");
+function showSaveStatus(){
+  saveStatusEl.style.opacity = 1;
+  clearTimeout(saveStatusEl._timer);
+  saveStatusEl._timer = setTimeout(()=> saveStatusEl.style.opacity = 0, 1200);
+}
+function saveElValue(el){
+  if(!el || !el.id) return;
+  if(el.type === 'checkbox' || el.type === 'radio'){
+    localStorage.setItem(el.id, el.checked);
+  } else {
+    localStorage.setItem(el.id, el.value);
+  }
+  showSaveStatus();
+}
+function autoBindSave(el){
+  const saved = localStorage.getItem(el.id);
+  if(saved !== null){
+    if(el.type === 'checkbox' || el.type === 'radio') el.checked = (saved === 'true');
+    else el.value = saved;
+  }
+  el.addEventListener(el.type === 'checkbox' || el.type === 'radio' ? 'change' : 'input', ()=> saveElValue(el));
+}
+
+/* ---------- HEADER logic (alignment already handled via CSS) ---------- */
+const agreeChk = $("CCAgree");
+const allOutstandingChk = $("Onetimecharge_alloutstanding");
+const oneTimeChk = $("Onetimecharge_tick");
+const oneTimeAmt = $("Onetimecharge_amt");
+
+function syncHeaderOptions(){
+  // Amount behavior
+  oneTimeAmt.disabled = !oneTimeChk.checked || allOutstandingChk.checked;
+  if (oneTimeAmt.disabled){ oneTimeAmt.value = ""; localStorage.setItem("Onetimecharge_amt",""); }
+
+  // Mutual exclusivity (disable opposite & clear it)
+  if (allOutstandingChk.checked){
+    oneTimeChk.checked = false;
+    oneTimeChk.disabled = true;
+    localStorage.setItem("Onetimecharge_tick", false);
+  } else {
+    oneTimeChk.disabled = false;
+  }
+
+  if (oneTimeChk.checked){
+    allOutstandingChk.checked = false;
+    allOutstandingChk.disabled = true;
+    localStorage.setItem("Onetimecharge_alloutstanding", false);
+  } else {
+    allOutstandingChk.disabled = false;
+  }
+  showSaveStatus();
+}
+
+[agreeChk, allOutstandingChk, oneTimeChk, oneTimeAmt].forEach(el=> autoBindSave(el));
+[allOutstandingChk, oneTimeChk].forEach(el=> el.addEventListener("change", syncHeaderOptions));
+
+/* ---------- SECTION A: Dynamic policies ---------- */
+const policiesContainer = $("policiesContainer");
+const addPolicyBtn = $("addPolicy");
+let policyCount = 0;
+
+function relationshipOptionsHTML(selected=""){
+  const opts = ["OWNSELF","SPOUSE","CHILDREN","PARENT","GRANDPARENT","SIBLING","COMPANY"];
+  return opts.map(v=> `<option value="${v}" ${v===selected?"selected":""}>${v}</option>`).join("");
+}
+function createPolicyEntry(index){
+  const wrap = document.createElement("div");
+  wrap.className = "policy";
+  wrap.dataset.index = index;
+  wrap.innerHTML = `
+    <h3>Policy Entry ${index}</h3>
+    <label>Policy No.
+      <input type="text" id="PolicyNo${index}" placeholder="PolicyNo${index}">
+    </label>
+    <label>Insured Name
+      <input type="text" id="Insured${index}" placeholder="Insured${index}">
+    </label>
+    <label>Relationship
+      <select id="Relationship${index}">
+        <option value="">-- CHOOSE --</option>
+        ${relationshipOptionsHTML()}
+      </select>
+    </label>
+  `;
+  // Uppercase on Insured input + autosave
+  const insured = wrap.querySelector("#Insured"+index);
+  insured.addEventListener("input", ()=>{ insured.value = insured.value.toUpperCase(); saveElValue(insured); });
+
+  // Autosave for fields inside
+  ["PolicyNo"+index, "Relationship"+index].forEach(id=>{
+    const el = wrap.querySelector("#"+id); autoBindSave(el);
+  });
+
+  // Also persist policyCount whenever a new one is added
+  localStorage.setItem("policyCount", policyCount);
+
+  // Restore saved values for this policy (if any)
+  const savedPolicy = localStorage.getItem("PolicyNo"+index); if(savedPolicy!==null) wrap.querySelector("#PolicyNo"+index).value = savedPolicy;
+  const savedInsured = localStorage.getItem("Insured"+index); if(savedInsured!==null){ insured.value = savedInsured.toUpperCase(); }
+  const savedRel = localStorage.getItem("Relationship"+index); if(savedRel!==null) wrap.querySelector("#Relationship"+index).value = savedRel;
+
+  return wrap;
+}
+function addPolicy(){
+  if(policyCount >= MAX_POLICIES) return;
+  policyCount++;
+  policiesContainer.appendChild(createPolicyEntry(policyCount));
+  addPolicyBtn.disabled = policyCount >= MAX_POLICIES;
+  showSaveStatus();
+}
+addPolicyBtn.addEventListener("click", ()=>{ addPolicy(); });
+
+/* ---------- CARD details enhancements ---------- */
+// Name on card uppercase
+$("CardName").addEventListener("input", (e)=>{ e.target.value = e.target.value.toUpperCase(); saveElValue(e.target); });
+
+// Card number 4x inputs with auto-jump & paste split + autosave
+const cardDigits = [ $("CardNo_1"), $("CardNo_2"), $("CardNo_3"), $("CardNo_4") ];
+cardDigits.forEach((el, idx)=>{
+  autoBindSave(el);
+  el.addEventListener("input", ()=>{
+    el.value = el.value.replace(/\D/g,'').slice(0,4);
+    saveElValue(el);
+    if(el.value.length===4 && idx<cardDigits.length-1) cardDigits[idx+1].focus();
+  });
+  el.addEventListener("keydown", (e)=>{ if(e.key==="Backspace" && el.value.length===0 && idx>0) cardDigits[idx-1].focus(); });
+  el.addEventListener("paste", (e)=>{
+    e.preventDefault();
+    const paste = (e.clipboardData || window.clipboardData).getData('text');
+    const digits = paste.replace(/\D/g,'').slice(0,16).padEnd(16,' ');
+    for(let i=0;i<4;i++){ cardDigits[i].value = digits.slice(i*4, i*4+4).trim(); saveElValue(cardDigits[i]); }
+    for(let i=0;i<4;i++){ if(cardDigits[i].value.length<4){ cardDigits[i].focus(); break; } if(i===3) cardDigits[3].focus(); }
+  });
+});
+
+// Expiry selects
+(function populateExpirySelectors(){
+  const mmSel = $("CardExpry_M_Select");
+  const months = [
+    "01 - JANUARY","02 - FEBRUARY","03 - MARCH","04 - APRIL",
+    "05 - MAY","06 - JUNE","07 - JULY","08 - AUGUST",
+    "09 - SEPTEMBER","10 - OCTOBER","11 - NOVEMBER","12 - DECEMBER"
+  ];
+  months.forEach(m=>{
+    const opt=document.createElement("option");
+    opt.value = m.slice(0,2);
+    opt.textContent = m;
+    mmSel.appendChild(opt);
+  });
+  autoBindSave(mmSel);
+
+  const yySel = $("CardExpry_Y_Select");
+  const currentYear = new Date().getFullYear();
+  for(let y=currentYear; y<=currentYear+15; y++){
+    const opt=document.createElement("option");
+    opt.value = String(y).slice(-2); // store 2-digit for PDF
+    opt.textContent = String(y);     // show full year
+    yySel.appendChild(opt);
+  }
+  autoBindSave(yySel);
+})();
+
+// Issuing bank dropdown
+(function populateBanks(){
+  const banks = [
+    "MAYBANK","CIMB BANK","PUBLIC BANK","RHB BANK","HONG LEONG BANK","AMBANK",
+    "UOB MALAYSIA","OCBC BANK (MALAYSIA)","HSBC BANK MALAYSIA","AFFIN BANK","ALLIANCE BANK",
+    "BANK ISLAM MALAYSIA","BANK MUAMALAT","BANK RAKYAT","BANK SIMPANAN NASIONAL (BSN)",
+    "STANDARD CHARTERED MALAYSIA","CITIBANK MALAYSIA","MUFG BANK (MALAYSIA)","MIZUHO BANK (MALAYSIA)",
+    "BANK OF CHINA (MALAYSIA)","BANGKOK BANK BERHAD","BNP PARIBAS MALAYSIA","DEUTSCHE BANK (MALAYSIA)",
+    "J.P. MORGAN MALAYSIA","ICBC (MALAYSIA)"
+  ];
+  const sel = $("CardBank_Select");
+  banks.forEach(b=>{ const o=document.createElement("option"); o.value=b; o.textContent=b; sel.appendChild(o); });
+  autoBindSave(sel);
+})();
+
+/* ---------- Signature Canvas ---------- */
+const canvas = $("signatureCanvas");
+const ctx = canvas.getContext("2d");
+function resizeCanvas(){
+  const ratio = Math.max(window.devicePixelRatio || 1, 1);
+  canvas.width = canvas.offsetWidth * ratio;
+  canvas.height = 150 * ratio;
+  canvas.style.height = "150px";
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.scale(ratio, ratio);
+  ctx.lineWidth = 2;
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "#000";
+}
+resizeCanvas(); window.addEventListener("resize", resizeCanvas);
+let drawing=false;
+function pos(e){
+  const rect = canvas.getBoundingClientRect();
+  const cx = e.touches ? e.touches[0].clientX : e.clientX;
+  const cy = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x: cx - rect.left, y: cy - rect.top };
+}
+canvas.addEventListener("mousedown", (e)=>{ drawing=true; const p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y);});
+canvas.addEventListener("mousemove", (e)=>{ if(!drawing) return; const p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke();});
+canvas.addEventListener("mouseup", ()=>drawing=false);
+canvas.addEventListener("mouseout", ()=>drawing=false);
+canvas.addEventListener("touchstart",(e)=>{ e.preventDefault(); drawing=true; const p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y);},{passive:false});
+canvas.addEventListener("touchmove",(e)=>{ e.preventDefault(); if(!drawing) return; const p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke();},{passive:false});
+canvas.addEventListener("touchend", ()=>drawing=false);
+$("clearSig").addEventListener("click", ()=>{ ctx.clearRect(0,0,canvas.width,canvas.height); });
+
+/* ---------- Restore saved values on load (including dynamic policies) ---------- */
+(function restoreAll(){
+  // Basic elements (checkboxes, radios, inputs, selects)
+  document.querySelectorAll("input,select,textarea").forEach(el=> autoBindSave(el));
+
+  // Dynamic policies
+  const savedCount = parseInt(localStorage.getItem("policyCount")) || 1;
+  policiesContainer.innerHTML = "";
+  policyCount = 0;
+  for(let i=1;i<=Math.min(savedCount, MAX_POLICIES);i++){ addPolicy(); }
+
+  // Header sync after restore
+  syncHeaderOptions();
+
+  // Ensure CardName is uppercase on load
+  const cn = $("CardName"); if(cn.value) cn.value = cn.value.toUpperCase();
+})();
+
+/* ---------- PDF helpers ---------- */
+function writeCardToPdf(form){
+  const combined = cardDigits.map(d => (d.value||"").padEnd(4,' ')).join('').slice(0,16);
+  for(let i=0;i<16;i++){
+    const field = `CardNo_${i+1}`;
+    const ch = combined[i] && combined[i] !== ' ' ? combined[i] : "";
+    safeSetText(form, field, ch);
+  }
+}
+function applyRelationship(form, n){
+  const dd = document.getElementById(`Relationship${n}`);
+  const val = (dd && dd.value) ? dd.value : "";
+  const map = { "OWNSELF":"Ownself","SPOUSE":"spouse","CHILDREN":"children","PARENT":"Parent","GRANDPARENT":"Grandparent","SIBLING":"Sibling","COMPANY":"Company" };
+  const all = Object.values(map);
+  all.forEach(name => safeCheck(form, `Relationship${n}_${name}`, false));
+  if(val && map[val]) safeCheck(form, `Relationship${n}_${map[val]}`, true);
+}
+
+/* ---------- Generate PDF ---------- */
+async function fillPDF(){
+  try {
+    $("generate").disabled = true;
+
+    const res = await fetch(PDF_FILENAME);
+    if (!res.ok) throw new Error("Cannot load PDF: " + PDF_FILENAME);
+    const bytes = await res.arrayBuffer();
+    const pdfDoc = await PDFLib.PDFDocument.load(bytes);
+    const form = pdfDoc.getForm();
+
+    // HEADER
+    safeCheck(form, "CCAgree", $("CCAgree").checked);
+    safeCheck(form, "Onetimecharge_alloutstanding", $("Onetimecharge_alloutstanding").checked);
+    safeCheck(form, "Onetimecharge_tick", $("Onetimecharge_tick").checked);
+    safeSetText(form, "Onetimecharge_amt", $("Onetimecharge_amt").value || "");
+
+    // SECTION A — existing entries only
+    const created = policiesContainer.querySelectorAll(".policy");
+    created.forEach(p => {
+      const idx = p.dataset.index;
+      const policyVal = p.querySelector(`#PolicyNo${idx}`)?.value || "";
+      const insuredVal = p.querySelector(`#Insured${idx}`)?.value || "";
+      safeSetText(form, `PolicyNo${idx}`, policyVal);
+      safeSetText(form, `Insured${idx}`, insuredVal);
+      applyRelationship(form, idx);
+    });
+
+    // CARD DETAILS
+    safeCheck(form, "CC_Tick", $("CC_Tick").checked);
+    safeCheck(form, "DebitC_Tick", $("DebitC_Tick").checked);
+    safeSetText(form, "CardName", $("CardName").value || "");
+    writeCardToPdf(form);
+
+    // Expiry -> split to CardExpry_M1/M2 & Y1/Y2 (2-digit year mapping)
+    const mm = ($("CardExpry_M_Select").value || "").padStart(2,' ');
+    const yy = ($("CardExpry_Y_Select").value || "").padStart(2,' ');
+    safeSetText(form, "CardExpry_M1", mm[0] || "");
+    safeSetText(form, "CardExpry_M2", mm[1] || "");
+    safeSetText(form, "CardExpry_Y1", yy[0] || "");
+    safeSetText(form, "CardExpry_Y2", yy[1] || "");
+
+    safeSetText(form, "CardBank", $("CardBank_Select").value || "");
+
+    // BRAND
+    safeCheck(form, "Visa_Tick", $("Visa_Tick").checked);
+    safeCheck(form, "Master_Tick", $("Master_Tick").checked);
+
+    // SIGNATURE meta fields
+    safeSetText(form, "Sign_OwnerName", $("Sign_OwnerName").value || "");
+    safeSetText(form, "Sign_OwnerNIRC", $("Sign_OwnerNIRC").value || "");
+    safeSetText(form, "Sign_Date", $("Sign_Date").value || "");
+    safeSetText(form, "Sign_Month", $("Sign_Month").value || "");
+    safeSetText(form, "Sign_Year", $("Sign_Year").value || "");
+    safeSetText(form, "Sign_State", $("Sign_State").value || "");
+
+    // Signature image embed (page 3 if exists; else last page)
+    const sigDataUrl = canvas.toDataURL("image/png");
+    let isBlank = true;
+    try {
+      const sample = ctx.getImageData(0,0,10,1).data;
+      for(let i=0;i<sample.length;i+=4){
+        if(!(sample[i]===255 && sample[i+1]===255 && sample[i+2]===255)){ isBlank=false; break; }
+      }
+    } catch(e){ isBlank=false; }
+    if(!isBlank){
+      try{
+        const pngBytes = await fetch(sigDataUrl).then(r=>r.arrayBuffer());
+        const png = await pdfDoc.embedPng(pngBytes);
+        const pages = pdfDoc.getPages();
+        const pageIndex = Math.min(2, pages.length-1);
+        const page = pages[pageIndex];
+        page.drawImage(png, { x: 360, y: 90, width: 160, height: 50 });
+      }catch(e){ /* ignore embed errors */ }
+    }
+
+    // Save & download
+    const pdfBytes = await pdfDoc.save();
+    const blob = new Blob([pdfBytes], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "Filled_Credit_Card_Form.pdf"; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=> URL.revokeObjectURL(url), 2500);
+
+  } catch(err){
+    alert("PDF generation failed: " + (err.message || err));
+    console.error(err);
+  } finally {
+    $("generate").disabled = false;
+  }
+}
+
+/* ---------- Reset All ---------- */
+function resetAll(){
+  // Clear our keys (safer than localStorage.clear if you share storage with other pages)
+  const keys = Object.keys(localStorage);
+  keys.forEach(k=>{
+    if(
+      k.startsWith("PolicyNo") || k.startsWith("Insured") || k.startsWith("Relationship") ||
+      ["policyCount","CCAgree","Onetimecharge_alloutstanding","Onetimecharge_tick","Onetimecharge_amt",
+       "CardName","CardNo_1","CardNo_2","CardNo_3","CardNo_4","CardExpry_M_Select","CardExpry_Y_Select","CardBank_Select",
+       "CC_Tick","DebitC_Tick","Sign_OwnerName","Sign_OwnerNIRC","Sign_Date","Sign_Month","Sign_Year","Sign_State",
+       "ThirdPP_Yes","ThirdPP_Name","ThirdPP_Email",
+       "ThirdPP_SourceFund_Self","ThirdPP_SourceFund_Parent","ThirdPP_SourceFund_Spouse","ThirdPP_SourceFund_Others","ThirdPP_SourceFund_Others_Write",
+       "ThirdPP_SourceWealth_EmployBus","ThirdPP_SourceWealth_Invest","ThirdPP_SourceWealth_Inherit","ThirdPP_SourceWealth_Savings",
+       "ThirdPP_SourceWealth_Parents","ThirdPP_SourceWealth_Spouse","ThirdPP_SourceWealth_Others","ThirdPP_SourceWealth_Others_Write"
+      ].includes(k)
+    ){
+      localStorage.removeItem(k);
+    }
+  });
+
+  document.querySelectorAll("input").forEach(inp=>{
+    if (inp.type === "checkbox" || inp.type === "radio") inp.checked = false;
+    else inp.value = "";
+    if(inp.id === "Onetimecharge_amt") inp.disabled = true;
+  });
+  document.querySelectorAll("select").forEach(s=> s.selectedIndex = 0);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // Rebuild policies
+  policiesContainer.innerHTML = "";
+  policyCount = 0;
+  addPolicyBtn.disabled = false;
+  addPolicy();
+
+  syncHeaderOptions();
+  showSaveStatus();
+}
+
+/* ---------- Wire buttons ---------- */
+$("generate").addEventListener("click", fillPDF);
+$("resetAll").addEventListener("click", resetAll);
+</script>
 </body>
 </html>
