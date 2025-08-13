@@ -745,6 +745,16 @@ function updateThirdPPUI(){
   $("thirdPP_fields").style.display = ($("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked) ? "block" : "none";
 }
 
+// Auto-uppercase all inputs in Section C except email
+document.querySelectorAll("#sectionC input[type=text], #sectionC input[type=tel], #sectionC input[type=number]").forEach(inp=>{
+  if (inp.id.toLowerCase().includes("email")) return; // skip email
+  inp.addEventListener("input", ()=>{
+    inp.value = inp.value.toUpperCase();
+    saveElValue(inp);
+  });
+});
+  
+
 // Bind events for toggling
 ["ThirdPP_Yes","ThirdPP_SubmittedNRIC"].forEach(id=>{
   const el = $(id);
