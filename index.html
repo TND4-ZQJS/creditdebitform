@@ -736,14 +736,8 @@ $("clearSig").addEventListener("click", ()=>{ ctx.clearRect(0,0,canvas.width,can
     monthSel.innerHTML += `<option value="${val}">${val} - ${m}</option>`;
   });
   autoBindSave(monthSel);
-
-  const yearSel = $("Text30");
-  yearSel.innerHTML = '<option value="">-- Year --</option>';
-  for(let y=2025; y<=2030; y++){
-    yearSel.innerHTML += `<option value="${y}">${y}</option>`;
-  }
-  autoBindSave(yearSel);
 })();
+
 
   // Show/hide logic for Section C
 function updateThirdPPUI(){
