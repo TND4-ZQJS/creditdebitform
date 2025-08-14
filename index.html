@@ -957,6 +957,53 @@ safeCheck(form, "PDPA", $("PDPA").checked);
       }catch(e){ /* ignore embed errors */ }
     }
 
+    // ===== SECTION E: Policy Owner (text fields) =====
+safeSetText(form, "Sign_OwnerName", $("Sign_OwnerName").value || "");
+safeSetText(form, "Sign_OwnerNIRC", $("Sign_OwnerNIRC").value || "");
+safeSetText(form, "Sign_State", $("Sign_State").value || "");
+safeSetText(form, "Sign_Date", $("Sign_Date").value || "");
+
+// If your PDF still has a month field and you no longer use it, clear it:
+safeSetText(form, "Sign_Month", "");
+
+// Year
+safeSetText(form, "Sign_Year", $("Sign_Year").value || "");
+
+// ===== Embed signatures (Owner + Payor) =====
+const pages = pdfDoc.getPages();
+const sigPage = pages[Math.min(2, pages.length - 1)]; // page 3 or last page
+
+// Owner signature
+try{
+  const ownerSigData = localStorage.getItem("sig_owner");
+  if(ownerSigData){
+    const ownerBytes = await fetch(ownerSigData).then(r=>r.arrayBuffer());
+    const ownerImg = await pdfDoc.embedPng(ownerBytes);
+    // TODO: adjust x,y,width,height to your PDF's owner signature box
+    sigPage.drawImage(ownerImg, { x: 360, y: 150, width: 160, height: 50 });
+  }
+}catch(e){ /* ignore embed errors */ }
+
+// Payor section only if Section C is active
+if ($("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked) {
+  safeSetText(form, "Sign_PayorName", $("Sign_PayorName").value || "");
+  safeSetText(form, "Sign_PayorNIRC", $("Sign_PayorNIRC").value || "");
+
+  try{
+    const payorSigData = localStorage.getItem("sig_payor");
+    if(payorSigData){
+      const payorBytes = await fetch(payorSigData).then(r=>r.arrayBuffer());
+      const payorImg = await pdfDoc.embedPng(payorBytes);
+      // TODO: adjust x,y,width,height to your PDF's payor signature box
+      sigPage.drawImage(payorImg, { x: 360, y: 90, width: 160, height: 50 });
+    }
+  }catch(e){ /* ignore embed errors */ }
+} else {
+  // If your PDF has fields for Sign_PayorName/Sign_PayorNIRC and you want them blank when hidden:
+  safeSetText(form, "Sign_PayorName", "");
+  safeSetText(form, "Sign_PayorNIRC", "");
+}
+
     // Save & download
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
@@ -984,10 +1031,17 @@ function resetAll(){
        "ThirdPP_Yes","ThirdPP_Name","ThirdPP_Email",
        "ThirdPP_SourceFund_Self","ThirdPP_SourceFund_Parent","ThirdPP_SourceFund_Spouse","ThirdPP_SourceFund_Others","ThirdPP_SourceFund_Others_Write",
        "ThirdPP_SourceWealth_EmployBus","ThirdPP_SourceWealth_Invest","ThirdPP_SourceWealth_Inherit","ThirdPP_SourceWealth_Savings",
-       "ThirdPP_SourceWealth_Parents","ThirdPP_SourceWealth_Spouse","ThirdPP_SourceWealth_Others","ThirdPP_SourceWealth_Others_Write"
+       "ThirdPP_SourceWealth_Parents","ThirdPP_SourceWealth_Spouse","ThirdPP_SourceWealth_Others","ThirdPP_SourceWealth_Others_Write","copyFromCC","copyFromThirdPP_Name","copyFromThirdPP_NIRC",
+"Sign_OwnerName","Sign_OwnerNIRC","Sign_State","Sign_Date","Sign_Year",
+"Sign_PayorName","Sign_PayorNIRC"
       ].includes(k)
     ){
       localStorage.removeItem(k);
+      localStorage.removeItem("sig_owner");
+      localStorage.removeItem("sig_payor");
+      const ownerPad = $("Owner_SignPad"); const payorPad = $("Payor_SignPad");
+      if(ownerPad){ ownerPad.getContext("2d").clearRect(0,0,ownerPad.width,ownerPad.height); }
+      if(payorPad){ payorPad.getContext("2d").clearRect(0,0,payorPad.width,payorPad.height); }
     }
   });
 
