@@ -395,6 +395,12 @@
         <option>KELANTAN</option>
       </select>
     </label>
+    
+    <label>Signed month
+      <select id="Sign_Month">
+        <option value="">-- Month --</option>
+      </select>
+    </label>
 
     <label>Signed date
       <select id="Sign_Day">
@@ -705,20 +711,22 @@ function restoreSignaturePreviews(){
 
 /* ---------- Expiry date selectors ---------- */
 (function populateDateSelectors(){
-  const monthSel = $("CardExpry_M_Select");
-  const yearSel = $("CardExpry_Y_Select");
+  const cardMonthSel = $("CardExpry_M_Select");
+  const cardYearSel = $("CardExpry_Y_Select");
   const dobDay = $("dob_day");
   const dobMonth = $("dob_month");
+  const signMonth = $("Sign_Month");
   const signDay = $("Sign_Day");
   const signYear = $("Sign_Year");
   const months = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
   for(let i=1;i<=12;i++) {
     const val = String(i).padStart(2,'0');
-    monthSel.innerHTML += `<option value="${val}">${months[i-1]}</option>`;
+    cardMonthSel.innerHTML += `<option value="${val}">${months[i-1]}</option>`;
     dobMonth.innerHTML += `<option value="${val}">${months[i-1]}</option>`;
+    signMonth.innerHTML += `<option value="${months[i-1]}">${months[i-1]}</option>`;
   }
   const currentYear = new Date().getFullYear();
-  for(let y=currentYear;y<=currentYear+15;y++) yearSel.innerHTML += `<option>${y}</option>`;
+  for(let y=currentYear;y<=currentYear+15;y++) cardYearSel.innerHTML += `<option>${y}</option>`;
   for(let i=1;i<=31;i++) {
     const val = String(i).padStart(2,'0');
     dobDay.innerHTML += `<option value="${val}">${i}</option>`;
@@ -838,8 +846,8 @@ async function fillPDF(){
     safeSetText(form, "Sign_OwnerName", $("Sign_OwnerName").value);
     safeSetText(form, "Sign_OwnerNIRC", $("Sign_OwnerNIRC").value);
     safeSetText(form, "Sign_State", $("Sign_State").value);
-    safeSetText(form, "Sign_Date", $("Sign_Day").value);
     safeSetText(form, "Sign_Month", $("Sign_Month").value);
+    safeSetText(form, "Sign_Date", $("Sign_Day").value);
     safeSetText(form, "Sign_Year", $("Sign_Year").value);
     safeSetText(form, "Sign_PayorName", $("Sign_PayorName").value);
     safeSetText(form, "Sign_PayorNIRC", $("Sign_PayorNIRC").value);
@@ -891,10 +899,6 @@ function resetAll(){
   policiesContainer.innerHTML = ""; policyCount = 0; addPolicyBtn.disabled=false; addPolicy();
   restoreSignaturePreviews();
 }
-
-/* ---------- Wire events ---------- */
-$("generate").addEventListener("click", fillPDF);
-$("resetAll").addEventListener("click", resetAll);
 
 /* ---------- On load ---------- */
 (function setup(){
