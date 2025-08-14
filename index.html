@@ -446,579 +446,232 @@
 <div id="saveStatus">Saved</div>
 
 <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+
 <script>
 /* ---------- CONFIG ---------- */
-const PDF_FILENAME = "Credit Card Enrolment Form_LF4092_200524_fillable.pdf";
-const MAX_POLICIES = 4;
+const PDF_FILENAME = "Zero Interest Easy Payment Plan Form_LF1739_fillable.pdf";
+const MAX_POLICIES = 5;
 
 /* ---------- helpers ---------- */
-function $(id) { return document.getElementById(id); }
-function safeSetText(form, name, text) {
-  try { form.getTextField(name).setText(String(text || "")); } catch (e) { /* missing field ok */ }
+function $(id){return document.getElementById(id);}
+function safeSetText(form, name, text){
+  try{ form.getTextField(name).setText(String(text || "")); } catch(e){}
 }
-function safeCheck(form, name, checked) {
-  try { const cb = form.getCheckBox(name); if (checked) cb.check(); else cb.uncheck(); } catch (e) { /* missing field ok */ }
+function safeCheck(form, name, checked){
+  try{ const cb = form.getCheckBox(name); if (checked) cb.check(); else cb.uncheck(); } catch(e){}
 }
-
-/* ---------- Save indicator ---------- */
-const saveStatusEl = $("saveStatus");
-function showSaveStatus() {
-  saveStatusEl.style.opacity = 1;
-  clearTimeout(saveStatusEl._timer);
-  saveStatusEl._timer = setTimeout(() => saveStatusEl.style.opacity = 0, 1200);
-}
-function saveElValue(el) {
-  if (!el || !el.id) return;
-  if (el.type === 'checkbox' || el.type === 'radio') {
-    localStorage.setItem(el.id, el.checked);
-  } else {
-    localStorage.setItem(el.id, el.value);
-  }
-  showSaveStatus();
-}
-function autoBindSave(el) {
-  const saved = localStorage.getItem(el.id);
-  if (saved !== null) {
-    if (el.type === 'checkbox' || el.type === 'radio') el.checked = (saved === 'true');
-    else el.value = saved;
-  }
-  el.addEventListener((el.type === 'checkbox' || el.type === 'radio') ? 'change' : 'input', () => saveElValue(el));
+function getCorrectMonthValue(monthName){
+  const months = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
+  const index = months.indexOf(monthName.toUpperCase());
+  return index !== -1 ? String(index+1).padStart(2,'0') : "";
 }
 
-/* ---------- HEADER logic (revised for radio buttons) ---------- */
-const oneTimeChk = $("Onetimecharge_tick");
-const oneTimeOptions = document.querySelector('.onetime-charge-options');
-const allOutstandingRadio = $("Onetimecharge_alloutstanding");
-const specificAmountRadio = $("Onetimecharge_specific");
-const oneTimeAmt = $("Onetimecharge_amt");
-
-function updateOneTimeUI() {
-  if (oneTimeChk.checked) {
-    oneTimeOptions.classList.add('active');
-    allOutstandingRadio.disabled = false;
-    specificAmountRadio.disabled = false;
-    oneTimeAmt.disabled = !specificAmountRadio.checked;
-  } else {
-    oneTimeOptions.classList.remove('active');
-    allOutstandingRadio.disabled = true;
-    specificAmountRadio.disabled = true;
-    oneTimeAmt.disabled = true;
-    allOutstandingRadio.checked = false;
-    specificAmountRadio.checked = false;
-    oneTimeAmt.value = "";
-    localStorage.removeItem("onetime_charge_option");
-    localStorage.removeItem("Onetimecharge_amt");
-  }
-}
-
-// Bind + restore main header controls
-["CCAgree", "Onetimecharge_tick"].forEach(id => {
-  const el = $(id);
-  if (el) autoBindSave(el);
-});
-
-// Event listener for the main one-time charge checkbox
-oneTimeChk.addEventListener('change', () => {
-  updateOneTimeUI();
-  saveElValue(oneTimeChk);
-});
-
-// Event listener for the radio buttons
-[allOutstandingRadio, specificAmountRadio].forEach(radio => {
-  radio.addEventListener('change', () => {
-    oneTimeAmt.disabled = !specificAmountRadio.checked;
-    if (allOutstandingRadio.checked) {
-      oneTimeAmt.value = "";
-      localStorage.removeItem("Onetimecharge_amt");
-    }
-    localStorage.setItem("onetime_charge_option", radio.value);
-    showSaveStatus();
-  });
-});
-
-// Event listener for the amount input
-oneTimeAmt.addEventListener('input', () => {
-  saveElValue(oneTimeAmt);
-});
-
-// Initial state and restoration on page load
-function restoreOneTimeState() {
-  const isOneTimeChecked = localStorage.getItem("Onetimecharge_tick") === 'true';
-  const savedOption = localStorage.getItem("onetime_charge_option");
-  const savedAmount = localStorage.getItem("Onetimecharge_amt");
-
-  oneTimeChk.checked = isOneTimeChecked;
-
-  if (isOneTimeChecked) {
-    if (savedOption === 'all') {
-      allOutstandingRadio.checked = true;
-    } else if (savedOption === 'specific') {
-      specificAmountRadio.checked = true;
-      oneTimeAmt.value = savedAmount || "";
-    }
-  }
-  updateOneTimeUI();
-}
-
-/* ---------- SECTION A: Dynamic policies (Add/Remove like EPP) ---------- */
+/* ---------- Policies dynamic (unchanged) ---------- */
 const policiesContainer = $("policiesContainer");
 const addPolicyBtn = $("addPolicy");
 let policyCount = 0;
 
-function relationshipOptionsHTML(selected = "") {
-  const opts = ["OWNSELF", "SPOUSE", "CHILDREN", "PARENT", "GRANDPARENT", "SIBLING", "COMPANY"];
-  return opts.map(v => `<option value="${v}" ${v === selected ? "selected" : ""}>${v}</option>`).join("");
-}
-
-function createPolicyEntry(index) {
+function createPolicyEntry(index){
   const wrap = document.createElement("div");
   wrap.className = "policy";
   wrap.dataset.index = index;
+  const title = document.createElement("h3"); title.textContent = `Policy ${index}`; wrap.appendChild(title);
 
-  // Build inner HTML
-  wrap.innerHTML = `
-    <h3><span>Policy Entry ${index}</span> <button type="button" class="remove-btn" aria-label="Remove policy">Remove</button></h3>
+  const pNoLabel = document.createElement("label"); pNoLabel.textContent = "Policy No.";
+  const pNoInput = document.createElement("input"); pNoInput.type="text"; pNoInput.id=`Paymentfor_PolicyNo${index}`; pNoInput.placeholder=`Paymentfor_PolicyNo${index}`;
+  pNoLabel.appendChild(pNoInput); wrap.appendChild(pNoLabel);
 
-    <label>Policy No.
-      <input type="text" id="PolicyNo${index}" placeholder="PolicyNo${index}">
-    </label>
-    <label>Insured Name
-      <input type="text" id="Insured${index}" placeholder="Insured${index}">
-    </label>
-    <label>Relationship
-      <select id="Relationship${index}">
-        <option value="">-- CHOOSE --</option>
-        ${relationshipOptionsHTML()}
-      </select>
-    </label>
-  `;
+  const ownerLabel = document.createElement("label"); ownerLabel.textContent = "Owner Name";
+  const ownerInput = document.createElement("input"); ownerInput.type="text"; ownerInput.id=`Paymentfor_PolicyNo${index}_OwnerName`; ownerInput.placeholder=`Paymentfor_PolicyNo${index}_OwnerName`;
+  ownerLabel.appendChild(ownerInput); wrap.appendChild(ownerLabel);
 
-  // Uppercase & autosave
-  const insured = wrap.querySelector("#Insured" + index);
-  insured.addEventListener("input", () => { insured.value = insured.value.toUpperCase(); saveElValue(insured); });
-
-  // Autosave for fields inside
-  ["PolicyNo" + index, "Relationship" + index].forEach(id => {
-    const el = wrap.querySelector("#" + id); if (el) autoBindSave(el);
+  const relLabel = document.createElement("label"); relLabel.textContent = "Relationship";
+  const relSelect = document.createElement("select"); relSelect.id=`Paymentfor_PolicyNo${index}_Relationship`;
+  ["","Ownself","Spouse","Children","Parents","Grandparents","Siblings","Employer/Employee"].forEach(opt=>{
+    const o=document.createElement("option"); o.value=opt; o.textContent=opt===""?"-- choose --":opt; relSelect.appendChild(o);
   });
+  relLabel.appendChild(relSelect); wrap.appendChild(relLabel);
 
-  // Restore saved values (if any)
-  const sp = localStorage.getItem("PolicyNo" + index); if (sp !== null) wrap.querySelector("#PolicyNo" + index).value = sp;
-  const si = localStorage.getItem("Insured" + index); if (si !== null) insured.value = si.toUpperCase();
-  const sr = localStorage.getItem("Relationship" + index); if (sr !== null) wrap.querySelector("#Relationship" + index).value = sr;
+  const premLabel = document.createElement("label"); premLabel.textContent = "First Premium (RM)";
+  const premInput = document.createElement("input"); premInput.type="text"; premInput.id=`Paymentfor_PolicyNo${index}_FirstPremium`; premInput.placeholder="e.g. 1200.00";
+  premLabel.appendChild(premInput); wrap.appendChild(premLabel);
 
-  // Remove button
-  wrap.querySelector(".remove-btn").addEventListener("click", () => {
-    policiesContainer.removeChild(wrap);
-    policyCount = Math.max(0, policyCount - 1);
-    addPolicyBtn.disabled = policyCount >= MAX_POLICIES;
-    renumberPolicies(); // Keep IDs and PDF mapping contiguous like EPP
-    showSaveStatus();
-  });
-
+  if(index>1){
+    const rem=document.createElement("button"); rem.type="button"; rem.className="secondary"; rem.textContent="Remove"; rem.style.marginTop="8px";
+    rem.addEventListener("click", ()=>{
+      wrap.remove();
+      policyCount--;
+      addPolicyBtn.disabled=false;
+      reorganizePolicyIndices();
+      showSaveStatus();
+      localStorage.removeItem("policies_data_" + index);
+    });
+    wrap.appendChild(rem);
+  }
   return wrap;
 }
-
-function addPolicy() {
-  if (policyCount >= MAX_POLICIES) return;
-  policyCount++;
-  const node = createPolicyEntry(policyCount);
-  policiesContainer.appendChild(node);
+function addPolicy(){ if(policyCount>=MAX_POLICIES) return; policyCount++; policiesContainer.appendChild(createPolicyEntry(policyCount)); if(policyCount>=MAX_POLICIES) addPolicyBtn.disabled=true; localStorage.setItem("policyCount", policyCount); showSaveStatus(); }
+function reorganizePolicyIndices(){
+  const nodes = Array.from(policiesContainer.querySelectorAll(".policy"));
+  policyCount = nodes.length;
+  nodes.forEach((n, idx)=> {
+    const newIdx = idx+1; n.dataset.index=newIdx; n.querySelector("h3").textContent=`Policy ${newIdx}`;
+    const pNo = n.querySelector(`[id^="Paymentfor_PolicyNo"]`); if(pNo){ pNo.id=`Paymentfor_PolicyNo${newIdx}`; pNo.placeholder=`Paymentfor_PolicyNo${newIdx}`;}
+    const owner = n.querySelector(`[id^="Paymentfor_PolicyNo"][id$="_OwnerName"]`); if(owner){ owner.id=`Paymentfor_PolicyNo${newIdx}_OwnerName`; owner.placeholder=`Paymentfor_PolicyNo${newIdx}_OwnerName`;}
+    const rel = n.querySelector("select"); if(rel) rel.id=`Paymentfor_PolicyNo${newIdx}_Relationship`;
+    const prem = n.querySelector(`[id^="Paymentfor_PolicyNo"][id$="_FirstPremium"]`); if(prem){ prem.id=`Paymentfor_PolicyNo${newIdx}_FirstPremium`; prem.placeholder=`Paymentfor_PolicyNo${newIdx}_FirstPremium`;}
+  });
   addPolicyBtn.disabled = policyCount >= MAX_POLICIES;
   localStorage.setItem("policyCount", policyCount);
-  showSaveStatus();
 }
 
-// Renumber remaining cards so IDs/labels are contiguous (…PolicyNo1,2,3,4)
-function renumberPolicies() {
-  const cards = Array.from(policiesContainer.querySelectorAll(".policy"));
-  const snapshot = cards.map((card) => {
-    const idx = card.dataset.index;
-    return {
-      el: card,
-      PolicyNo: card.querySelector(`#PolicyNo${idx}`)?.value || "",
-      Insured: card.querySelector(`#Insured${idx}`)?.value || "",
-      Relationship: card.querySelector(`#Relationship${idx}`)?.value || ""
-    };
-  });
-
-  // Clear localStorage keys for all old indices
-  snapshot.forEach((_, i) => {
-    const old = (cards[i].dataset.index);
-    ["PolicyNo", "Insured", "Relationship"].forEach(k => localStorage.removeItem(k + old));
-  });
-
-  // Reassign indices and IDs, restore values, and rebind autosave
-  snapshot.forEach((data, i) => {
-    const newIndex = i + 1;
-    const card = data.el;
-    card.dataset.index = newIndex;
-    // Update heading text
-    const titleSpan = card.querySelector("h3 span");
-    if (titleSpan) titleSpan.textContent = "Policy Entry " + newIndex;
-
-    // Update IDs on inputs/selects
-    const pn = card.querySelector(`[id^="PolicyNo"]`);
-    const iname = card.querySelector(`[id^="Insured"]`);
-    const rel = card.querySelector(`[id^="Relationship"]`);
-    pn.id = "PolicyNo" + newIndex;
-    pn.setAttribute("placeholder", "PolicyNo" + newIndex);
-    iname.id = "Insured" + newIndex;
-    iname.setAttribute("placeholder", "Insured" + newIndex);
-    rel.id = "Relationship" + newIndex;
-
-    // Rebind uppercase + autosave
-    iname.removeEventListener("input", iname._upperListener || (() => { }));
-    const upperListener = () => { iname.value = iname.value.toUpperCase(); saveElValue(iname); };
-    iname.addEventListener("input", upperListener);
-    iname._upperListener = upperListener;
-
-    [pn, rel].forEach(el => {
-      el.replaceWith(el.cloneNode(true)); // remove previous listeners cleanly
-    });
-
-    // Requery after clone
-    const pn2 = card.querySelector("#PolicyNo" + newIndex);
-    const rel2 = card.querySelector("#Relationship" + newIndex);
-
-    // Restore captured values and save into new keys
-    pn2.value = data.PolicyNo || "";
-    iname.value = (data.Insured || "").toUpperCase();
-    rel2.value = data.Relationship || "";
-
-    autoBindSave(pn2);
-    autoBindSave(iname);
-    autoBindSave(rel2);
-
-    localStorage.setItem("PolicyNo" + newIndex, pn2.value);
-    localStorage.setItem("Insured" + newIndex, iname.value);
-    localStorage.setItem("Relationship" + newIndex, rel2.value);
-  });
-
-  // Update policyCount in storage
-  policyCount = snapshot.length;
-  localStorage.setItem("policyCount", policyCount);
-}
-
-/* Add policy button */
-addPolicyBtn.addEventListener("click", addPolicy);
-
-/* ---------- CARD details enhancements ---------- */
-// Name on card uppercase
-$("CardName").addEventListener("input", (e) => { e.target.value = e.target.value.toUpperCase(); saveElValue(e.target); });
-
-// Card number inputs with auto-jump & paste split + autosave
-const cardDigits = [$("CardNo_1"), $("CardNo_2"), $("CardNo_3"), $("CardNo_4")];
-cardDigits.forEach((el, idx) => {
-  autoBindSave(el);
-  el.addEventListener("input", () => {
-    el.value = el.value.replace(/\D/g, '').slice(0, 4);
-    saveElValue(el);
-    if (el.value.length === 4 && idx < cardDigits.length - 1) cardDigits[idx + 1].focus();
-  });
-  el.addEventListener("keydown", (e) => { if (e.key === "Backspace" && el.value.length === 0 && idx > 0) cardDigits[idx - 1].focus(); });
-  el.addEventListener("paste", (e) => {
+/* ---------- Credit card inputs ---------- */
+const ccDigits = [ $("CC_1"), $("CC_2"), $("CC_3"), $("CC_4") ];
+ccDigits.forEach((el, idx)=>{
+  el.addEventListener("input", ()=>{ el.value = el.value.replace(/\D/g,'').slice(0,4); if(el.value.length===4 && idx<ccDigits.length-1) ccDigits[idx+1].focus(); saveElValue(el); });
+  el.addEventListener("keydown", (e)=>{ if(e.key==="Backspace" && el.value.length===0 && idx>0) ccDigits[idx-1].focus(); });
+  el.addEventListener("paste", (e)=>{
     e.preventDefault();
     const paste = (e.clipboardData || window.clipboardData).getData('text');
-    const digits = paste.replace(/\D/g, '').slice(0, 16).padEnd(16, ' ');
-    for (let i = 0; i < 4; i++) { cardDigits[i].value = digits.slice(i * 4, i * 4 + 4).trim(); saveElValue(cardDigits[i]); }
-    for (let i = 0; i < 4; i++) { if (cardDigits[i].value.length < 4) { cardDigits[i].focus(); break; } if (i === 3) cardDigits[3].focus(); }
+    const digits = paste.replace(/\D/g,'').slice(0,16).padEnd(16,' ');
+    for(let i=0;i<4;i++){ ccDigits[i].value = digits.slice(i*4, i*4+4).trim(); saveElValue(ccDigits[i]); }
+    for(let i=0;i<4;i++){ if(ccDigits[i].value.length<4){ ccDigits[i].focus(); break; } if(i===3) ccDigits[3].focus(); }
   });
 });
 
-// Expiry selectors
-(function populateExpirySelectors() {
-  const mmSel = $("CardExpry_M_Select");
-  const months = [
-    "01 - JANUARY", "02 - FEBRUARY", "03 - MARCH", "04 - APRIL",
-    "05 - MAY", "06 - JUNE", "07 - JULY", "08 - AUGUST",
-    "09 - SEPTEMBER", "10 - OCTOBER", "11 - NOVEMBER", "12 - DECEMBER"
-  ];
-  months.forEach(m => {
-    const opt = document.createElement("option");
-    opt.value = m.slice(0, 2);
-    opt.textContent = m;
-    mmSel.appendChild(opt);
-  });
-  autoBindSave(mmSel);
-
-  const yySel = $("CardExpry_Y_Select");
-  const currentYear = new Date().getFullYear();
-  for (let y = currentYear; y <= currentYear + 15; y++) {
-    const opt = document.createElement("option");
-    opt.value = String(y).slice(-2); // store 2-digit for PDF
-    opt.textContent = String(y);     // show full year
-    yySel.appendChild(opt);
-  }
-  autoBindSave(yySel);
-})();
-
-// Issuing bank dropdown (uppercase)
-(function populateBanks() {
-  const banks = [
-    "MAYBANK", "CIMB BANK", "PUBLIC BANK", "RHB BANK", "HONG LEONG BANK", "AMBANK",
-    "UOB MALAYSIA", "OCBC BANK (MALAYSIA)", "HSBC BANK MALAYSIA", "AFFIN BANK", "ALLIANCE BANK",
-    "BANK ISLAM MALAYSIA", "BANK MUAMALAT", "BANK RAKYAT", "BANK SIMPANAN NASIONAL (BSN)",
-    "STANDARD CHARTERED MALAYSIA", "CITIBANK MALAYSIA", "MUFG BANK (MALAYSIA)", "MIZUHO BANK (MALAYSIA)",
-    "BANK OF CHINA (MALAYSIA)", "BANGKOK BANK BERHAD", "BNP PARIBAS MALAYSIA", "DEUTSCHE BANK (MALAYSIA)",
-    "J.P. MORGAN MALAYSIA", "ICBC (MALAYSIA)"
-  ];
-  const sel = $("CardBank_Select");
-  banks.forEach(b => { const o = document.createElement("option"); o.value = b; o.textContent = b; sel.appendChild(o); });
-  autoBindSave(sel);
-})();
-
-// Populate DOB dropdowns for Third Party
-(function populateDOB() {
-  const daySel = $("Text28");
-  daySel.innerHTML = '<option value="">-- Day --</option>';
-  for (let d = 1; d <= 31; d++) {
-    const val = String(d).padStart(2, '0');
-    daySel.innerHTML += `<option value="${val}">${val}</option>`;
-  }
-  autoBindSave(daySel);
-
-  const monthSel = $("Text29");
-  monthSel.innerHTML = '<option value="">-- Month --</option>';
-  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  months.forEach((m, i) => {
-    const val = String(i + 1).padStart(2, '0');
-    monthSel.innerHTML += `<option value="${val}">${val} - ${m}</option>`;
-  });
-  autoBindSave(monthSel);
-})();
-
-// Show/hide logic for Section C
-function updateThirdPPUI() {
-  $("thirdPP_ic_wrap").style.display = $("ThirdPP_Yes").checked ? "block" : "none";
-  $("thirdPP_fields").style.display = ($("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked) ? "block" : "none";
-  updateSectionEPayorBlock();
-}
-
-// Auto-uppercase all inputs in Section C except email
-document.querySelectorAll("#sectionC input[type=text], #sectionC input[type=tel], #sectionC input[type=number]").forEach(inp => {
-  if (inp.id.toLowerCase().includes("email")) return; // skip email
-  inp.addEventListener("input", () => {
-    inp.value = inp.value.toUpperCase();
-    saveElValue(inp);
-  });
-});
-
-// Bind events for toggling
-["ThirdPP_Yes", "ThirdPP_SubmittedNRIC"].forEach(id => {
-  const el = $(id);
-  autoBindSave(el); // so state is saved to localStorage
-  el.addEventListener("change", () => {
-    updateThirdPPUI();
-    saveElValue(el);
-  });
-});
-
-// Run once on page load to restore correct visibility
-updateThirdPPUI();
-
-/* ---------- SECTION E logic ---------- */
-(function populateSignatureDropdowns() {
-  const daySel = $("Sign_Day");
-  daySel.innerHTML = '<option value="">-- Day --</option>';
-  for (let d = 1; d <= 31; d++) {
-    const val = String(d).padStart(2, '0');
-    daySel.innerHTML += `<option value="${val}">${val}</option>`;
-  }
-  autoBindSave(daySel);
-
-  const yearSel = $("Sign_Year");
-  const currentYear = new Date().getFullYear();
-  yearSel.innerHTML = '<option value="">-- Year --</option>';
-  for (let y = currentYear; y <= currentYear + 5; y++) {
-    yearSel.innerHTML += `<option value="${String(y)}">${String(y)}</option>`;
-  }
-  autoBindSave(yearSel);
-})();
-
-// Owner's name "same as card owner"
-$("Owner_SameAsCard").addEventListener("change", (e) => {
-  if (e.target.checked) {
-    $("Sign_OwnerName").value = $("CardName").value;
-  }
-  saveElValue($("Sign_OwnerName"));
-  saveElValue(e.target);
-});
-// Payor's name "same as third party payor"
-$("Payor_SameAsThirdPP").addEventListener("change", (e) => {
-  if (e.target.checked) {
-    $("Sign_PayorName").value = $("ThirdPP_Name").value;
-  }
-  saveElValue($("Sign_PayorName"));
-  saveElValue(e.target);
-});
-// Payor's IC "same as third party payor"
-$("PayorIC_SameAsThirdPP").addEventListener("change", (e) => {
-  if (e.target.checked) {
-    $("Sign_PayorNIRC").value = $("ThirdPP_NIRC").value;
-  }
-  saveElValue($("Sign_PayorNIRC"));
-  saveElValue(e.target);
-});
-
-// Auto-uppercase all inputs in Section E
-document.querySelectorAll("#sectionE input[type=text]").forEach(inp => {
-  inp.addEventListener("input", () => {
-    inp.value = inp.value.toUpperCase();
-    saveElValue(inp);
-  });
-});
-
-// Toggle visibility of Payor block
-function updateSectionEPayorBlock() {
-  $("payor_block").style.display = $("ThirdPP_Yes").checked ? "block" : "none";
-}
-
-// --- Signature Modal & Canvas Logic ---
-const sigModal = $("sigModal");
-const sigCanvas = $("sigCanvas");
-const sigCtx = sigCanvas.getContext("2d");
-let currentSignatureTarget = null; // 'owner' or 'payor'
-
-function resizeCanvas() {
-  const ratio = Math.max(window.devicePixelRatio || 1, 1);
-  sigCanvas.width = sigCanvas.offsetWidth * ratio;
-  sigCanvas.height = 150 * ratio;
-  sigCanvas.style.height = "150px";
-  sigCtx.setTransform(1, 0, 0, 1, 0, 0);
-  sigCtx.scale(ratio, ratio);
-  sigCtx.lineWidth = 2;
-  sigCtx.lineCap = "round";
-  sigCtx.strokeStyle = "#000";
-}
-
+/* ---------- Signature modal (shared) ---------- */
+const sigModal = $("sigModal"), sigCanvas = $("sigCanvas"), sigModalContent = $("sigModalContent");
+const saveSigBtn = $("saveSigBtn"), clearSigBtn = $("clearSigBtn"), cancelSigBtn = $("cancelSigBtn");
+const previews = { cardholder: $("preview_cardholder"), witness: $("preview_witness") };
+let activeSigField = null;
+let sigCtx = sigCanvas.getContext('2d');
 let drawing = false;
-function getPos(e) {
-  const rect = sigCanvas.getBoundingClientRect();
-  const cx = e.touches ? e.touches[0].clientX : e.clientX;
-  const cy = e.touches ? e.touches[0].clientY : e.clientY;
-  return { x: cx - rect.left, y: cy - rect.top };
+
+function resizeSigCanvas(){
+  const dpr = window.devicePixelRatio || 1;
+  const cssWidth = Math.min(window.innerWidth * 0.95, 700);
+  const cssHeight = cssWidth / 3.3;
+  sigCanvas.width = cssWidth * dpr;
+  sigCanvas.height = cssHeight * dpr;
+  sigCanvas.style.width = cssWidth + 'px';
+  sigCanvas.style.height = cssHeight + 'px';
+  sigCtx.setTransform(dpr,0,0,dpr,0,0);
+  sigCtx.lineWidth = 2.5;
+  sigCtx.lineCap = 'round';
+  sigCtx.strokeStyle = '#000';
 }
-
-sigCanvas.addEventListener("mousedown", (e) => { drawing = true; const p = getPos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x, p.y); });
-sigCanvas.addEventListener("mousemove", (e) => { if (!drawing) return; const p = getPos(e); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); });
-sigCanvas.addEventListener("mouseup", () => drawing = false);
-sigCanvas.addEventListener("mouseout", () => drawing = false);
-sigCanvas.addEventListener("touchstart", (e) => { e.preventDefault(); drawing = true; const p = getPos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x, p.y); }, { passive: false });
-sigCanvas.addEventListener("touchmove", (e) => { e.preventDefault(); if (!drawing) return; const p = getPos(e); sigCtx.lineTo(p.x, p.y); sigCtx.stroke(); }, { passive: false });
-sigCanvas.addEventListener("touchend", () => drawing = false);
-
-window.addEventListener("resize", resizeCanvas);
-
-function saveSignature() {
-  const dataURL = sigCanvas.toDataURL("image/png");
-  localStorage.setItem(`sig_${currentSignatureTarget}`, dataURL);
-  updateSignaturePreview(currentSignatureTarget, dataURL);
-  closeSigModal();
-}
-
-function clearSignature() {
-  sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
-}
-
-function openSig(target) {
-  currentSignatureTarget = target;
+function openSig(field){
+  activeSigField = field;
   sigModal.style.display = 'flex';
-  resizeCanvas(); // Ensure canvas is the correct size on open
-  const savedSig = localStorage.getItem(`sig_${target}`);
-  if (savedSig) {
+  resizeSigCanvas();
+  sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);
+  const saved = localStorage.getItem(field + '_sig');
+  if(saved){
     const img = new Image();
-    img.onload = () => {
-      clearSignature();
-      sigCtx.drawImage(img, 0, 0, sigCanvas.width / (window.devicePixelRatio || 1), sigCanvas.height / (window.devicePixelRatio || 1));
-    };
-    img.src = savedSig;
-  } else {
-    clearSignature();
+    img.src = saved;
+    img.onload = ()=> sigCtx.drawImage(img,0,0,sigCanvas.width/(window.devicePixelRatio||1), sigCanvas.height/(window.devicePixelRatio||1));
   }
 }
+function closeSig(){ sigModal.style.display = 'none'; activeSigField = null; }
 
-function closeSigModal() {
-  sigModal.style.display = 'none';
-  currentSignatureTarget = null;
-}
+sigCanvas.addEventListener('mousedown', e=>{ drawing=true; sigCtx.beginPath(); sigCtx.moveTo(e.offsetX,e.offsetY); });
+sigCanvas.addEventListener('mousemove', e=>{ if(!drawing) return; sigCtx.lineTo(e.offsetX,e.offsetY); sigCtx.stroke(); });
+sigCanvas.addEventListener('mouseup', ()=>drawing=false);
+sigCanvas.addEventListener('mouseleave', ()=>drawing=false);
+sigCanvas.addEventListener('touchstart', e=>{ e.preventDefault(); const t=e.touches[0]; const rect=sigCanvas.getBoundingClientRect(); sigCtx.beginPath(); sigCtx.moveTo(t.clientX-rect.left, t.clientY-rect.top); drawing=true; }, {passive:false});
+sigCanvas.addEventListener('touchmove', e=>{ e.preventDefault(); if(!drawing) return; const t=e.touches[0]; const rect=sigCanvas.getBoundingClientRect(); sigCtx.lineTo(t.clientX-rect.left, t.clientY-rect.top); sigCtx.stroke(); }, {passive:false});
+sigCanvas.addEventListener('touchend', ()=>drawing=false);
 
-function updateSignaturePreview(target, dataURL) {
-  const preview = $(`sigprev_${target}`);
-  if (!preview) return;
-  preview.innerHTML = "";
-  if (dataURL && dataURL !== "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=") {
-    const img = document.createElement("img");
-    img.src = dataURL;
-    preview.appendChild(img);
-  } else {
-    preview.innerHTML = `<span>Tap to Sign (${target === 'owner' ? 'Owner' : 'Payor'})</span>`;
-    localStorage.removeItem(`sig_${target}`);
-  }
-}
-
-// Bind modal buttons
-$("saveSigBtn").addEventListener("click", saveSignature);
-$("clearSigBtn").addEventListener("click", clearSignature);
-$("cancelSigBtn").addEventListener("click", closeSigModal);
-
-// Bind clear buttons
-$("clearSigOwner").addEventListener("click", () => {
-  localStorage.removeItem("sig_owner");
-  updateSignaturePreview("owner", null);
+saveSigBtn.addEventListener('click', ()=>{
+  if(!activeSigField) return;
+  const dataURL = sigCanvas.toDataURL();
+  localStorage.setItem(activeSigField + '_sig', dataURL);
+  previews[activeSigField].innerHTML = `<img src="${dataURL}">`;
+  closeSig();
   showSaveStatus();
 });
-$("clearSigPayor").addEventListener("click", () => {
-  localStorage.removeItem("sig_payor");
-  updateSignaturePreview("payor", null);
-  showSaveStatus();
+clearSigBtn.addEventListener('click', ()=>{
+  sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);
+  localStorage.removeItem(activeSigField + '_sig');
+  previews[activeSigField].innerHTML = `<span>Tap to Sign (${activeSigField==='witness'?'Witness':'Cardholder'})</span>`;
+});
+cancelSigBtn.addEventListener('click', closeSig);
+
+/* Clear preview buttons */
+$("clearPreviewCardholder").addEventListener("click", ()=>{
+  localStorage.removeItem('cardholder_sig');
+  previews.cardholder.innerHTML = `<span>Tap to Sign (Cardholder)</span>`;
+});
+$("clearPreviewWitness").addEventListener("click", ()=>{
+  localStorage.removeItem('witness_sig');
+  previews.witness.innerHTML = `<span>Tap to Sign (Witness)</span>`;
 });
 
-/* ---------- Restore on load ---------- */
-(function restoreAll() {
-  document.querySelectorAll("input,select,textarea").forEach(el => {
-    if (el.id !== "Onetimecharge_amt" && el.name !== "onetime_charge_option") {
-      autoBindSave(el);
-    }
-  });
+/* On load - restore previews if saved */
+function restoreSignaturePreviews(){
+  const c = localStorage.getItem('cardholder_sig');
+  const w = localStorage.getItem('witness_sig');
+  if(c) previews.cardholder.innerHTML = `<img src="${c}">`;
+  if(w) previews.witness.innerHTML = `<img src="${w}">`;
+}
+restoreSignaturePreviews();
 
-  restoreOneTimeState();
-
-  policiesContainer.innerHTML = "";
-  policyCount = 0;
-  const savedCount = Math.max(1, Math.min(parseInt(localStorage.getItem("policyCount")) || 1, MAX_POLICIES));
-  for (let i = 1; i <= savedCount; i++) { addPolicy(); }
-
-  const cn = $("CardName"); if (cn.value) cn.value = cn.value.toUpperCase();
-  updateSectionEPayorBlock();
-  updateThirdPPUI();
-
-  // Restore signatures from localStorage
-  updateSignaturePreview("owner", localStorage.getItem("sig_owner"));
-  updateSignaturePreview("payor", localStorage.getItem("sig_payor"));
+/* ---------- Signed date selects (same as amendment filler) ---------- */
+(function populateDateSelectors(){
+  const daySel = $("Signed_Day");
+  for(let i=1;i<=31;i++) daySel.innerHTML += `<option>${i}</option>`;
+  const monthSel = $("Signed_Month");
+  const months = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
+  months.forEach(m=> monthSel.innerHTML += `<option>${m}</option>`);
+  const yearSel = $("Signed_Year");
+  const current = new Date().getFullYear();
+  for(let y=current;y>=current-5;y--) yearSel.innerHTML += `<option>${y}</option>`;
 })();
 
-/* ---------- PDF helpers ---------- */
-function writeCardToPdf(form) {
-  const digits = [$("CardNo_1"), $("CardNo_2"), $("CardNo_3"), $("CardNo_4")];
-  const combined = digits.map(d => (d.value || "").padEnd(4, ' ')).join('').slice(0, 16);
-  for (let i = 0; i < 16; i++) {
-    const field = `CardNo_${i + 1}`;
-    const ch = combined[i] && combined[i] !== ' ' ? combined[i] : "";
-    safeSetText(form, field, ch);
-  }
-}
-function applyRelationship(form, n) {
-  const dd = document.getElementById(`Relationship${n}`);
-  const val = (dd && dd.value) ? dd.value : "";
-  const map = { "OWNSELF": "Ownself", "SPOUSE": "spouse", "CHILDREN": "children", "PARENT": "Parent", "GRANDPARENT": "Grandparent", "SIBLING": "Sibling", "COMPANY": "Company" };
-  const all = Object.values(map);
-  all.forEach(name => safeCheck(form, `Relationship${n}_${name}`, false));
-  if (val && map[val]) safeCheck(form, `Relationship${n}_${map[val]}`, true);
+/* ---------- localStorage autosave + restore ---------- */
+const saveStatusEl = $("saveStatus");
+let saveTimer = null;
+function showSaveStatus(){
+  saveStatusEl.style.opacity = 1;
+  clearTimeout(saveStatusEl._timer);
+  saveStatusEl._timer = setTimeout(()=> saveStatusEl.style.opacity = 0, 1200);
 }
 
-/* ---------- Generate PDF ---------- */
-async function fillPDF() {
+/* Debounced save wrapper */
+function debounceSave(fn, wait=150){
+  let t;
+  return function(...args){ clearTimeout(t); t = setTimeout(()=> fn.apply(this,args), wait); };
+}
+
+/* Save an element's value to localStorage (for inputs & selects) */
+function saveElValue(el){
+  if(!el || !el.id) return;
+  localStorage.setItem(el.id, el.value);
+  showSaveStatus();
+}
+
+/* Initialize inputs/selects/textarea: restore and attach listeners */
+document.querySelectorAll("input,select,textarea").forEach(el=>{
+  // restore
+  const saved = localStorage.getItem(el.id);
+  if(saved !== null) el.value = saved;
+
+  // attach listener
+  el.addEventListener("input", ()=>{
+    // uppercase enforcement for section1 & section5 inputs
+    if( el.closest(".section1") || el.closest(".section5") ){
+      // only uppercase text-like inputs (not numeric-only inputs)
+      if(el.type !== "number" && el.inputMode !== "numeric" && el.tagName.toLowerCase() !== 'select'){
+        el.value = el.value.toUpperCase();
+      }
+    }
+    // save debounced
+    debounceSave(()=> saveElValue(el), 120)();
+  });
+});
+
+/* ---------- Fill PDF ---------- */
+async function fillPDF(){
   try {
     $("generate").disabled = true;
 
@@ -1028,155 +681,136 @@ async function fillPDF() {
     const pdfDoc = await PDFLib.PDFDocument.load(bytes);
     const form = pdfDoc.getForm();
 
-    // HEADER
-    safeCheck(form, "CCAgree", $("CCAgree").checked);
-    safeCheck(form, "Onetimecharge_tick", $("Onetimecharge_tick").checked);
+    // Section 1
+    safeSetText(form, "Cardholder_Name", $("Cardholder_Name").value || "");
+    safeSetText(form, "Cardholder_MailingAdd_Line1", $("Cardholder_MailingAdd_Line1").value || "");
+    safeSetText(form, "Cardholder_MailingAdd_Line2", $("Cardholder_MailingAdd_Line2").value || "");
+    safeSetText(form, "Cardholder_NIRC", $("Cardholder_NIRC").value || "");
+    safeSetText(form, "Cardholder_HomeNo", $("Cardholder_HomeNo").value || "");
+    safeSetText(form, "Cardholder_MobileNo", $("Cardholder_MobileNo").value || "");
 
-    // One-time charge radio logic
-    if ($("Onetimecharge_tick").checked) {
-      if ($("Onetimecharge_alloutstanding").checked) {
-        safeCheck(form, "Onetimecharge_alloutstanding", true);
-        safeSetText(form, "Onetimecharge_amt", "");
-      } else if ($("Onetimecharge_specific").checked) {
-        safeCheck(form, "Onetimecharge_alloutstanding", false);
-        safeSetText(form, "Onetimecharge_amt", $("Onetimecharge_amt").value || "");
-      }
-    } else {
-      safeCheck(form, "Onetimecharge_alloutstanding", false);
-      safeSetText(form, "Onetimecharge_amt", "");
-    }
+    // CC combined
+    const ccCombined = ccDigits.map(d=>d.value.padEnd(4,' ').slice(0,4)).join('').slice(0,16).replace(/\s/g,'');
+    safeSetText(form, "CC_Number", ccCombined);
 
-    // SECTION A — existing entries only (contiguous after renumber)
-    const created = policiesContainer.querySelectorAll(".policy");
-    created.forEach(p => {
-      const idx = p.dataset.index;
-      const policyVal = p.querySelector(`#PolicyNo${idx}`)?.value || "";
-      const insuredVal = p.querySelector(`#Insured${idx}`)?.value || "";
-      safeSetText(form, `PolicyNo${idx}`, policyVal);
-      safeSetText(form, `Insured${idx}`, insuredVal);
-      applyRelationship(form, idx);
+    // Expiry month/year (corrected logic)
+    const monthName = $("expiryMonth").value || "";
+    const yearValue = $("expiryYear").value || "";
+    const expiry = (monthName.trim() === "" || yearValue.trim() === "") ? "" : `${getCorrectMonthValue(monthName)}/${String(yearValue).slice(-2)}`;
+    safeSetText(form, "CC_Expirydate", expiry);
+
+    // Banks (checkboxes)
+    const bankFields = ["CC_Bank_UOB","CC_Bank_CIMB","CC_Bank_HLB","CC_Bank_PBB","CC_Bank_MBB","CC_Bank_HSBC","CC_Bank_Alliance","CC_Bank_StanChart"];
+    bankFields.forEach(b => safeCheck(form, b, false));
+    const bankSel = $("CC_Bank_Select").value;
+    if (bankSel) safeCheck(form, bankSel, true);
+
+    // Card type
+    safeCheck(form, "Visa", false); safeCheck(form, "Master", false);
+    const cardType = $("CardType_Select").value; if (cardType) safeCheck(form, cardType, true);
+
+    // EPP Term
+    safeCheck(form, "EPPTerm_6Months", false); safeCheck(form, "EPPTerm_12Months", false);
+    const term = $("EPPTerm_Select").value; if (term) safeCheck(form, term, true);
+
+    // After EPP frequency
+    const afterFields = ["AfterEPP_Annually","AfterEPP_Halfyearly","AfterEPP_Quarterly","AfterEPP_Monthly"];
+    afterFields.forEach(a => safeCheck(form, a, false));
+    const afterSel = $("AfterEPP_Select").value; if (afterSel) safeCheck(form, afterSel, true);
+
+    // policies rows
+    const rows = Array.from(policiesContainer.querySelectorAll(".policy"));
+    rows.forEach((row, idx) => {
+      const i = idx+1;
+      const pNo = row.querySelector(`#Paymentfor_PolicyNo${i}`)?.value || "";
+      const owner = row.querySelector(`#Paymentfor_PolicyNo${i}_OwnerName`)?.value || "";
+      const rel = row.querySelector(`#Paymentfor_PolicyNo${i}_Relationship`)?.value || "";
+      const firstPrem = row.querySelector(`#Paymentfor_PolicyNo${i}_FirstPremium`)?.value || "";
+      safeSetText(form, `Paymentfor_PolicyNo${i}`, pNo);
+      safeSetText(form, `Paymentfor_PolicyNo${i}_OwnerName`, owner);
+      safeSetText(form, `Paymentfor_PolicyNo${i}_Relationship`, rel);
+      safeSetText(form, `Paymentfor_PolicyNo${i}_FirstPremium`, firstPrem);
     });
-
-    // CARD DETAILS
-    safeCheck(form, "CC_Tick", $("CC_Tick").checked);
-    safeCheck(form, "DebitC_Tick", $("DebitC_Tick").checked);
-    safeSetText(form, "CardName", $("CardName").value || "");
-    writeCardToPdf(form);
-
-    // Expiry -> split to CardExpry_M1/M2 & Y1/Y2 (2-digit year mapping)
-    const mm = ($("CardExpry_M_Select").value || "").padStart(2, ' ');
-    const yy = ($("CardExpry_Y_Select").value || "").padStart(2, ' ');
-    safeSetText(form, "CardExpry_M1", mm[0] || "");
-    safeSetText(form, "CardExpry_M2", mm[1] || "");
-    safeSetText(form, "CardExpry_Y1", yy[0] || "");
-    safeSetText(form, "CardExpry_Y2", yy[1] || "");
-
-    safeSetText(form, "CardBank", $("CardBank_Select").value || "");
-
-    // BRAND
-    safeCheck(form, "Visa_Tick", $("Visa_Tick").checked);
-    safeCheck(form, "Master_Tick", $("Master_Tick").checked);
-
-    // THIRD PARTY SECTION
-    safeCheck(form, "ThirdPP_Yes", $("ThirdPP_Yes").checked);
-    safeCheck(form, "ThirdPP_SubmittedNRIC", $("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked);
-
-    if ($("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked) {
-      [
-        "ThirdPP_Name", "ThirdPP_NIRC", "ThirdPP_Nationality", "ThirdPP_CorrespAdd_Line1",
-        "ThirdPP_CorrespAdd_Line2", "ThirdPP_CorrrepAdd_Postcode", "ThirdPP_CorrespAdd_Country",
-        "ThirdPP_Email", "ThirdPP_Phone", "ThirdPP_Occupation", "ThirdPP_Employer",
-        "ThirdPP_NatureBusiness", "ThirdPP_Income",
-        "ThirdPP_SourceFund_Others_Write", "ThirdPP_SourceWealth_Others_Write"
-      ].forEach(id => safeSetText(form, id, $(id).value || ""));
-
-      safeSetText(form, "Text28", $("Text28").value || "");
-      safeSetText(form, "Text29", $("Text29").value || "");
-      safeSetText(form, "Text30", $("Text30").value || "");
-
-      [
-        "ThirdPP_SourceFund_Self", "ThirdPP_SourceFund_Parent", "ThirdPP_SourceFund_Spouse", "ThirdPP_SourceFund_Others",
-        "ThirdPP_SourceWealth_EmployBus", "ThirdPP_SourceWealth_Invest", "ThirdPP_SourceWealth_Inherit", "ThirdPP_SourceWealth_Savings",
-        "ThirdPP_SourceWealth_Parents", "ThirdPP_SourceWealth_Spouse", "ThirdPP_SourceWealth_Others"
-      ].forEach(id => safeCheck(form, id, $(id).checked));
+    for(let i = rows.length+1; i<=MAX_POLICIES; i++){
+      safeSetText(form, `Paymentfor_PolicyNo${i}`, "");
+      safeSetText(form, `Paymentfor_PolicyNo${i}_OwnerName`, "");
+      safeSetText(form, `Paymentfor_PolicyNo${i}_Relationship`, "");
+      safeSetText(form, `Paymentfor_PolicyNo${i}_FirstPremium`, "");
     }
 
-    // PDPA
-    safeCheck(form, "PDPA", $("PDPA").checked);
+    // Section 5
+    safeSetText(form, "Signed_State", $("Signed_State").value || "");
+    safeSetText(form, "Signed_Month", $("Signed_Month").value || "");
+    safeSetText(form, "Signed_Day", $("Signed_Day").value || "");
+    safeSetText(form, "Signed_Year", $("Signed_Year").value || "");
+    safeSetText(form, "Witness_Name", $("Witness_Name").value || "");
+    safeSetText(form, "Witness_NRIC", $("Witness_NRIC").value || "");
 
-    // SECTION E - Signature & Authorize
-    safeSetText(form, "Sign_OwnerName", $("Sign_OwnerName").value || "");
-    safeSetText(form, "Sign_OwnerNIRC", $("Sign_OwnerNIRC").value || "");
-    safeSetText(form, "Sign_State", $("Sign_State").value || "");
-    safeSetText(form, "Sign_Day", $("Sign_Day").value || "");
-    safeSetText(form, "Sign_Year", $("Sign_Year").value || "");
+    // Embed signatures on PAGE 3 (index 2)
+    const pages = pdfDoc.getPages();
+    const pageForSign = pages[2]; // Index 2 is the 3rd page
+    const poSig = localStorage.getItem('cardholder_sig');
+    const wSig = localStorage.getItem('witness_sig');
 
-    if ($("ThirdPP_Yes").checked) {
-      safeSetText(form, "Sign_PayorName", $("Sign_PayorName").value || "");
-      safeSetText(form, "Sign_PayorNIRC", $("Sign_PayorNIRC").value || "");
+    const sigWidth = 160, sigHeight = 50; // default embed size, adjust if needed
+    if(poSig){
+      try{
+        const pngBytes = await fetch(poSig).then(r=>r.arrayBuffer());
+        const png = await pdfDoc.embedPng(pngBytes);
+        pageForSign.drawImage(png, { x: 360, y: 120, width: sigWidth, height: sigHeight });
+      }catch(e){ console.warn("Cardholder signature embed failed:", e); }
     }
-
-    // Signature image embed
-    const embedSignature = async (form, sigKey, fieldName) => {
-      const sigDataUrl = localStorage.getItem(sigKey);
-      if (sigDataUrl) {
-        try {
-          const pngBytes = await fetch(sigDataUrl).then(r => r.arrayBuffer());
-          const png = await pdfDoc.embedPng(pngBytes);
-          const formImage = form.createImage(png);
-          form.getButton(fieldName).setImage(formImage);
-        } catch (e) {
-          console.error(`Failed to embed signature for ${fieldName}:`, e);
-          // Fallback if needed, e.g., print a placeholder text
-        }
-      }
-    };
-    await embedSignature(form, "sig_owner", "Sign_OwnerSig");
-    await embedSignature(form, "sig_payor", "Sign_PayorSig");
+    if(wSig){
+      try{
+        const pngBytes2 = await fetch(wSig).then(r=>r.arrayBuffer());
+        const png2 = await pdfDoc.embedPng(pngBytes2);
+        pageForSign.drawImage(png2, { x: 140, y: 120, width: sigWidth, height: sigHeight });
+      }catch(e){ console.warn("Witness signature embed failed:", e); }
+    }
 
     // Save & download
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = "Filled_Credit_Card_Form.pdf"; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 2500);
+    const a = document.createElement("a"); a.href = url; a.download = "Filled_ZeroInterest_EPP.pdf"; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=> URL.revokeObjectURL(url), 2500);
 
   } catch (err) {
-    alert("PDF generation failed: " + (err.message || err));
     console.error(err);
+    alert("PDF generation failed: " + (err.message || err));
   } finally {
     $("generate").disabled = false;
   }
 }
 
 /* ---------- Reset All ---------- */
-function resetAll() {
+function resetAll(){
+  document.querySelectorAll("input").forEach(inp=>{ if(inp.type==='checkbox' || inp.type==='radio') inp.checked=false; else inp.value=''; });
+  document.querySelectorAll("select").forEach(s=> s.selectedIndex = 0);
   localStorage.clear();
-  document.querySelectorAll("input").forEach(inp => {
-    if (inp.type === "checkbox" || inp.type === "radio") inp.checked = false;
-    else inp.value = "";
-    if (inp.id === "Onetimecharge_amt") inp.disabled = true;
-  });
-  document.querySelectorAll("select").forEach(s => s.selectedIndex = 0);
-
-  // Clear signature previews
-  updateSignaturePreview("owner", null);
-  updateSignaturePreview("payor", null);
-
-  // Rebuild policies
-  policiesContainer.innerHTML = "";
-  policyCount = 0;
-  addPolicyBtn.disabled = false;
-  addPolicy();
-
-  updateOneTimeUI();
-  updateThirdPPUI();
-  showSaveStatus();
+  // remove policy nodes and recreate
+  policiesContainer.innerHTML = ""; policyCount = 0; addPolicyBtn.disabled=false; addPolicy();
+  // restore previews empty
+  previews.cardholder.innerHTML = `<span>Tap to Sign (Cardholder)</span>`;
+  previews.witness.innerHTML = `<span>Tap to Sign (Witness)</span>`;
 }
 
-/* ---------- Wire buttons ---------- */
+/* ---------- Wire events ---------- */
 $("generate").addEventListener("click", fillPDF);
 $("resetAll").addEventListener("click", resetAll);
+
+/* ---------- Restore saved form values on load ---------- */
+(function restoreSavedValues(){
+  document.querySelectorAll("input,select,textarea").forEach(el=>{
+    const saved = localStorage.getItem(el.id);
+    if(saved !== null) el.value = saved;
+  });
+  restoreSignaturePreviews();
+})();
+
+/* ---------- Small nicety: show Save indicator when localStorage is updated by other code ---------- */
+window.addEventListener('storage', ()=> showSaveStatus());
 </script>
+
 </body>
 </html>
