@@ -120,6 +120,13 @@
     .policy-grid{grid-template-columns:1fr}
     .card-digit{width:60px}
   }
+
+  .sig-preview{
+  border:1px solid #ddd; border-radius:10px; width:100%; height:120px;
+  background:#fff; display:flex; align-items:center; justify-content:center;
+  cursor:pointer; overflow:hidden;
+}
+.sig-preview img{max-width:100%; max-height:100%}
 </style>
 </head>
 <body>
@@ -322,38 +329,109 @@
   </label>
 </section>
 
-  <section class="section">
-    <h2>Section E - Signature</h2>
+ <section class="section" id="sectionE">
+  <h2>Section E – Sign & Authorise</h2>
+
+  <div class="row">
+    <label style="flex:1">Policy Owner’s Name
+      <div class="row" style="gap:8px;align-items:center">
+        <input id="Sign_OwnerName" type="text" placeholder="AS IN I/C" style="flex:1">
+        <label class="inline" title="Copy from Cardholder's Name">
+          <input id="Owner_SameAsCard" type="checkbox"> <span>same as Card owner</span>
+        </label>
+      </div>
+    </label>
+    <label style="flex:1">IC No.
+      <input id="Sign_OwnerNIRC" type="text" inputmode="numeric" pattern="\d*">
+    </label>
+  </div>
+
+  <div class="row">
+    <label style="flex:1">Signed at (State)
+      <select id="Sign_State">
+        <option value="">-- Select State --</option>
+        <option>SELANGOR</option>
+        <option>K.LUMPUR</option>
+        <option>MELAKA</option>
+        <option>N.SEMBILAN</option>
+        <option>JOHOR</option>
+        <option>PENANG</option>
+        <option>PERAK</option>
+        <option>KEDAH</option>
+        <option>PAHANG</option>
+        <option>PERLIS</option>
+        <option>SARAWAK</option>
+        <option>SABAH</option>
+        <option>T'GANU</option>
+        <option>KELANTAN</option>
+      </select>
+    </label>
+
+    <label>Signed date
+      <select id="Sign_Day">
+        <option value="">-- Day --</option>
+      </select>
+    </label>
+
+    <label>Signed year
+      <select id="Sign_Year">
+        <option value="">-- Year --</option>
+      </select>
+    </label>
+  </div>
+
+  <h3 style="margin:8px 0">Owner’s Signature</h3>
+  <div class="sig-preview" id="sigprev_owner" onclick="openSig('owner')">
+    <span>Tap to Sign (Owner)</span>
+  </div>
+  <div class="row">
+    <button id="clearSigOwner" type="button" class="secondary">Clear Owner Signature</button>
+  </div>
+
+  <!-- Conditional Payor section -->
+  <div id="payor_block" style="display:none; margin-top:14px;">
+    <div class="muted" style="margin-bottom:6px"><em>Fill and Sign only if Payor is not Policy Owner</em></div>
 
     <div class="row">
-      <label style="flex:1">Signer (Owner) Name
-        <input id="Sign_OwnerName" type="text">
+      <label style="flex:1">Payor’s Name
+        <div class="row" style="gap:8px;align-items:center">
+          <input id="Sign_PayorName" type="text" placeholder="AS IN I/C" style="flex:1">
+          <label class="inline" title="Copy from Third Party Payor’s Name">
+            <input id="Payor_SameAsThirdPP" type="checkbox"> <span>same as Third Party Payor</span>
+          </label>
+        </div>
       </label>
-      <label style="flex:1">Owner NRIC
-        <input id="Sign_OwnerNIRC" type="text">
+      <label style="flex:1">Payor’s IC No.
+        <div class="row" style="gap:8px;align-items:center">
+          <input id="Sign_PayorNIRC" type="text" inputmode="numeric" pattern="\d*" style="flex:1">
+          <label class="inline" title="Copy from Third Party Payor’s IC">
+            <input id="PayorIC_SameAsThirdPP" type="checkbox"> <span>same as Third Party Payor</span>
+          </label>
+        </div>
       </label>
     </div>
 
-    <div class="row">
-      <label>Sign Date (DD)
-        <input id="Sign_Date" maxlength="2" inputmode="numeric">
-      </label>
-      <label>Sign Month
-        <input id="Sign_Month" maxlength="2" inputmode="numeric">
-      </label>
-      <label>Sign Year (YYYY)
-        <input id="Sign_Year" maxlength="4" inputmode="numeric">
-      </label>
-      <label style="flex:1">State
-        <input id="Sign_State" type="text">
-      </label>
+    <h3 style="margin:8px 0">Payor’s Signature</h3>
+    <div class="sig-preview" id="sigprev_payor" onclick="openSig('payor')">
+      <span>Tap to Sign (Payor)</span>
     </div>
-  </section>
+    <div class="row">
+      <button id="clearSigPayor" type="button" class="secondary">Clear Payor Signature</button>
+    </div>
+  </div>
+</section>
 
-  <canvas id="signatureCanvas"></canvas>
-    <div class="row">
-      <button id="clearSig" class="secondary">Clear Signature</button>
+<!-- Shared signature modal (re-usable for owner & payor) -->
+<div id="sigModal" style="display:none; position:fixed; z-index:9999; inset:0; background:rgba(0,0,0,.6); align-items:center; justify-content:center;">
+  <div id="sigModalContent" style="background:#fff; padding:12px; border-radius:10px; display:flex; flex-direction:column; gap:10px; width:min(720px,96vw);">
+    <canvas id="sigCanvas" style="border:1px solid #ddd; border-radius:10px; touch-action:none;"></canvas>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button id="saveSigBtn" type="button">Done</button>
+      <button id="clearSigBtn" type="button" class="secondary">Clear</button>
+      <button id="cancelSigBtn" type="button" class="secondary">Cancel</button>
     </div>
+  </div>
+</div>
 
   <section class="section actions">
     <button id="generate">Generate PDF</button>
