@@ -322,38 +322,72 @@
   </label>
 </section>
 
-  <section class="section">
-    <h2>Section E - Signature</h2>
+<!-- SECTION E: Signature -->
+<div id="sectionE" class="section">
 
-    <div class="row">
-      <label style="flex:1">Signer (Owner) Name
-        <input id="Sign_OwnerName" type="text">
-      </label>
-      <label style="flex:1">Owner NRIC
-        <input id="Sign_OwnerNIRC" type="text">
-      </label>
-    </div>
+  <!-- Policy Owner Signature -->
+  <h3>Policy Owner Signature</h3>
 
-    <div class="row">
-      <label>Sign Date (DD)
-        <input id="Sign_Date" maxlength="2" inputmode="numeric">
-      </label>
-      <label>Sign Month
-        <input id="Sign_Month" maxlength="2" inputmode="numeric">
-      </label>
-      <label>Sign Year (YYYY)
-        <input id="Sign_Year" maxlength="4" inputmode="numeric">
-      </label>
-      <label style="flex:1">State
-        <input id="Sign_State" type="text">
-      </label>
-    </div>
-  </section>
+  <label>
+    Policy Owner’s Name:
+    <input type="text" id="Sign_OwnerName" />
+    <label><input type="checkbox" id="copyFromCC" /> Same as Card Owner</label>
+  </label>
 
-  <canvas id="signatureCanvas"></canvas>
-    <div class="row">
-      <button id="clearSig" class="secondary">Clear Signature</button>
+  <label>
+    IC No.:
+    <input type="number" id="Sign_OwnerNIRC" />
+  </label>
+
+  <!-- Signed at + Date + Year -->
+  <div class="signed-row">
+    <label>Signed at (State):
+      <select id="Sign_State"></select>
+    </label>
+
+    <label>Date:
+      <select id="Sign_Date"></select>
+    </label>
+
+    <label>Year:
+      <select id="Sign_Year"></select>
+    </label>
+  </div>
+
+  <!-- Signature Pad -->
+  <div>
+    <label>Signature:</label>
+    <canvas id="Owner_SignPad" width="400" height="150" style="border:1px solid #000;"></canvas>
+    <button type="button" id="Owner_SignClear">Clear</button>
+  </div>
+
+  <hr>
+
+  <!-- Payor Signature (conditional) -->
+  <div id="payorSignatureSection" style="display:none;">
+    <h4>Fill and Sign only if Payor is not Policy Owner</h4>
+
+    <label>
+      Payor’s Name:
+      <input type="text" id="Sign_PayorName" />
+      <label><input type="checkbox" id="copyFromThirdPP_Name" /> Same as Third Party Payor</label>
+    </label>
+
+    <label>
+      Payor’s IC No.:
+      <input type="number" id="Sign_PayorNIRC" />
+      <label><input type="checkbox" id="copyFromThirdPP_NIRC" /> Same as Third Party Payor</label>
+    </label>
+
+    <!-- Payor Signature Pad -->
+    <div>
+      <label>Signature:</label>
+      <canvas id="Payor_SignPad" width="400" height="150" style="border:1px solid #000;"></canvas>
+      <button type="button" id="Payor_SignClear">Clear</button>
     </div>
+  </div>
+
+</div>
 
   <section class="section actions">
     <button id="generate">Generate PDF</button>
