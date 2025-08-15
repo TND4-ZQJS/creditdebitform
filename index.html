@@ -50,46 +50,21 @@
   .onetime-charge-options {
     grid-column: 2 / -1;
     opacity: 0.5;
-    pointer-events: none; /* Prevents interaction when dimmed */
+    pointer-events: none;
   }
-
   .onetime-charge-options.active {
     opacity: 1;
-    pointer-events: auto; /* Allows interaction when active */
+    pointer-events: auto;
   }
-
   .onetime-charge-options fieldset{
-    border: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    border: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;
   }
-
-  .onetime-charge-options input[type="number"]{
-    width: auto;
-    margin-top: 0;
-  }
-
-  .onetime-charge-options input[type="number"][disabled] {
-    background-color: #f6f7f9;
-    cursor: not-allowed;
-  }
-  
-  .onetime-charge-options .row{
-    align-items: center;
-  }
-
-  .onetime-charge-options .row:has(#Onetimecharge_alloutstanding:not(:checked)) .option-label {
-    color: var(--muted);
-  }
-  .onetime-charge-options .row:has(#Onetimecharge_specific:not(:checked)) .option-label {
-    color: var(--muted);
-  }
-  .onetime-charge-options .row:has(#Onetimecharge_specific:not(:checked)) #Onetimecharge_amt {
-    opacity: 0.5;
-  }
+  .onetime-charge-options input[type="number"]{ width: auto; margin-top: 0; }
+  .onetime-charge-options input[type="number"][disabled] { background-color: #f6f7f9; cursor: not-allowed; }
+  .onetime-charge-options .row{ align-items: center; }
+  .onetime-charge-options .row:has(#Onetimecharge_alloutstanding:not(:checked)) .option-label { color: var(--muted); }
+  .onetime-charge-options .row:has(#Onetimecharge_specific:not(:checked)) .option-label { color: var(--muted); }
+  .onetime-charge-options .row:has(#Onetimecharge_specific:not(:checked)) #Onetimecharge_amt { opacity: 0.5; }
 
   /* Card number */
   .card-number-block .card-number-inputs{display:flex;gap:8px;margin-top:8px}
@@ -103,8 +78,23 @@
   .policy .remove-btn{background:transparent;border:1px solid var(--line);color:#333;border-radius:8px;padding:6px 10px;font-size:0.9rem}
   .policy .remove-btn:hover{border-color:#d0d0d7}
 
-  /* Signature */
-  canvas{width:100%;height:150px;border-radius:10px;border:1px solid #ddd;background:#fff}
+  /* Signature preview tiles */
+  .sig-preview{
+    width:100%; height:150px; border:1px dashed #bbb; border-radius:10px;
+    display:flex; align-items:center; justify-content:center; background:#fff; cursor:pointer; position:relative;
+  }
+  .sig-preview img{ max-width:100%; max-height:100%; object-fit:contain; }
+  .sig-preview span{ color:#999; }
+
+  /* Signature Modal */
+  .sig-modal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1000; }
+  .sig-modal .box{
+    width:min(560px, 92vw); background:#fff; margin:6vh auto; padding:14px; border-radius:12px;
+    box-shadow:0 18px 50px rgba(0,0,0,.25)
+  }
+  .sig-modal h3{ margin:0 0 8px 0; }
+  #sigCanvas{ width:100%; height:220px; background:#fff; border:1px solid #ddd; border-radius:10px; touch-action:none }
+  .sig-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:10px; }
 
   /* Save indicator */
   #saveStatus{
@@ -112,14 +102,8 @@
     padding:6px 10px; border-radius:8px; font-size:0.85rem; opacity:0; transition:opacity .25s;
   }
 
-  @media (max-width:900px){
-    .header-grid{grid-template-columns:1fr}
-    .onetime-charge-options{grid-column: 1 / -1;}
-  }
-  @media (max-width:720px){
-    .policy-grid{grid-template-columns:1fr}
-    .card-digit{width:60px}
-  }
+  @media (max-width:900px){ .header-grid{grid-template-columns:1fr} .onetime-charge-options{grid-column: 1 / -1;} }
+  @media (max-width:720px){ .policy-grid{grid-template-columns:1fr} .card-digit{width:60px} }
 </style>
 </head>
 <body>
@@ -164,9 +148,7 @@
 
   <section class="section" id="sectionA">
     <h2>Section A — Policy Entries</h2>
-
     <div id="policiesContainer" class="policy-grid"></div>
-
     <div class="row">
       <button id="addPolicy">+ Add Another Policy</button>
       <small class="muted">Up to 4 policies</small>
@@ -354,9 +336,13 @@
     </label>
   </div>
 
-  <canvas id="signatureCanvasOwner" width="300" height="150"></canvas>
+  <!-- NEW: Tap-to-sign previews (Owner + Payor) -->
+  <h3>Policy Owner Signature</h3>
+  <div class="sig-preview" id="preview_owner" onclick="openSig('owner')">
+    <span>Tap to Sign (Owner)</span>
+  </div>
   <div class="row">
-    <button id="clearSigOwner" class="secondary">Clear Signature</button>
+    <button id="clearPreviewOwner" class="secondary" type="button">Clear Signature</button>
   </div>
 
   <div id="payorSignatureSection" style="display:none; margin-top: 20px;">
@@ -380,10 +366,13 @@
         <span>Same as Third Party Payor</span>
       </label>
     </div>
-    
-    <canvas id="signatureCanvasPayor" width="300" height="150"></canvas>
+
+    <h3>Payor Signature</h3>
+    <div class="sig-preview" id="preview_payor" onclick="openSig('payor')">
+      <span>Tap to Sign (Payor)</span>
+    </div>
     <div class="row">
-      <button id="clearSigPayor" class="secondary">Clear Signature</button>
+      <button id="clearPreviewPayor" class="secondary" type="button">Clear Signature</button>
     </div>
   </div>
 </section>
@@ -398,10 +387,22 @@
   </footer>
 </main>
 
+<!-- Signature Modal -->
+<div id="sigModal" class="sig-modal" aria-hidden="true">
+  <div class="box">
+    <h3 id="sigModalTitle">Draw Signature</h3>
+    <canvas id="sigCanvas" width="1000" height="440"></canvas>
+    <div class="sig-actions">
+      <button id="sigDone" type="button">Done</button>
+      <button id="sigClear" type="button" class="ghost">Clear</button>
+      <button id="sigCancel" type="button" class="secondary">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <div id="saveStatus">Saved</div>
 
 <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 <script>
 /* ---------- CONFIG ---------- */
 const PDF_FILENAME = "Credit Card Enrolment Form_LF4092_200524_fillable.pdf";
@@ -466,20 +467,10 @@ function updateOneTimeUI(){
     localStorage.removeItem("Onetimecharge_amt");
   }
 }
-
-// Bind + restore main header controls
-["CCAgree","Onetimecharge_tick"].forEach(id=>{
-  const el = $(id);
-  if(el) autoBindSave(el);
-});
-
-// Event listener for the main one-time charge checkbox
+["CCAgree","Onetimecharge_tick"].forEach(id=>{ const el = $(id); if(el) autoBindSave(el); });
 oneTimeChk.addEventListener('change', ()=>{
-  updateOneTimeUI();
-  saveElValue(oneTimeChk);
+  updateOneTimeUI(); saveElValue(oneTimeChk);
 });
-
-// Event listener for the radio buttons
 [allOutstandingRadio, specificAmountRadio].forEach(radio => {
   radio.addEventListener('change', () => {
     oneTimeAmt.disabled = !specificAmountRadio.checked;
@@ -491,32 +482,20 @@ oneTimeChk.addEventListener('change', ()=>{
     showSaveStatus();
   });
 });
-
-// Event listener for the amount input
-oneTimeAmt.addEventListener('input', ()=>{
-  saveElValue(oneTimeAmt);
-});
-
-// Initial state and restoration on page load
+oneTimeAmt.addEventListener('input', ()=>{ saveElValue(oneTimeAmt); });
 function restoreOneTimeState(){
   const isOneTimeChecked = localStorage.getItem("Onetimecharge_tick") === 'true';
   const savedOption = localStorage.getItem("onetime_charge_option");
   const savedAmount = localStorage.getItem("Onetimecharge_amt");
-
   oneTimeChk.checked = isOneTimeChecked;
-
   if (isOneTimeChecked) {
-    if (savedOption === 'all') {
-      allOutstandingRadio.checked = true;
-    } else if (savedOption === 'specific') {
-      specificAmountRadio.checked = true;
-      oneTimeAmt.value = savedAmount || "";
-    }
+    if (savedOption === 'all') { allOutstandingRadio.checked = true; }
+    else if (savedOption === 'specific') { specificAmountRadio.checked = true; oneTimeAmt.value = savedAmount || ""; }
   }
   updateOneTimeUI();
 }
 
-/* ---------- SECTION A: Dynamic policies (Add/Remove like EPP) ---------- */
+/* ---------- SECTION A: Dynamic policies ---------- */
 const policiesContainer = $("policiesContainer");
 const addPolicyBtn = $("addPolicy");
 let policyCount = 0;
@@ -525,16 +504,12 @@ function relationshipOptionsHTML(selected=""){
   const opts = ["OWNSELF","SPOUSE","CHILDREN","PARENT","GRANDPARENT","SIBLING","COMPANY"];
   return opts.map(v=> `<option value="${v}" ${v===selected?"selected":""}>${v}</option>`).join("");
 }
-
 function createPolicyEntry(index){
   const wrap = document.createElement("div");
   wrap.className = "policy";
   wrap.dataset.index = index;
-
-  // Build inner HTML
   wrap.innerHTML = `
     <h3><span>Policy Entry ${index}</span> <button type="button" class="remove-btn" aria-label="Remove policy">Remove</button></h3>
-
     <label>Policy No.
       <input type="text" id="PolicyNo${index}" placeholder="PolicyNo${index}">
     </label>
@@ -548,33 +523,23 @@ function createPolicyEntry(index){
       </select>
     </label>
   `;
-
-  // Uppercase & autosave
   const insured = wrap.querySelector("#Insured"+index);
   insured.addEventListener("input", ()=>{ insured.value = insured.value.toUpperCase(); saveElValue(insured); });
-
-  // Autosave for fields inside
   ["PolicyNo"+index, "Relationship"+index].forEach(id=>{
     const el = wrap.querySelector("#"+id); if(el) autoBindSave(el);
   });
-
-  // Restore saved values (if any)
   const sp = localStorage.getItem("PolicyNo"+index); if(sp!==null) wrap.querySelector("#PolicyNo"+index).value = sp;
   const si = localStorage.getItem("Insured"+index); if(si!==null) insured.value = si.toUpperCase();
   const sr = localStorage.getItem("Relationship"+index); if(sr!==null) wrap.querySelector("#Relationship"+index).value = sr;
 
-  // Remove button
   wrap.querySelector(".remove-btn").addEventListener("click", ()=>{
     policiesContainer.removeChild(wrap);
     policyCount = Math.max(0, policyCount - 1);
     addPolicyBtn.disabled = policyCount >= MAX_POLICIES;
-    renumberPolicies(); // Keep IDs and PDF mapping contiguous like EPP
-    showSaveStatus();
+    renumberPolicies(); showSaveStatus();
   });
-
   return wrap;
 }
-
 function addPolicy(){
   if(policyCount >= MAX_POLICIES) return;
   policyCount++;
@@ -584,8 +549,6 @@ function addPolicy(){
   localStorage.setItem("policyCount", policyCount);
   showSaveStatus();
 }
-
-// Renumber remaining cards so IDs/labels are contiguous (…PolicyNo1,2,3,4)
 function renumberPolicies(){
   const cards = Array.from(policiesContainer.querySelectorAll(".policy"));
   const snapshot = cards.map((card)=> {
@@ -597,73 +560,48 @@ function renumberPolicies(){
       Relationship: card.querySelector(`#Relationship${idx}`)?.value || ""
     };
   });
-
-  // Clear localStorage keys for all old indices
   snapshot.forEach((_, i)=>{
     const old = (cards[i].dataset.index);
     ["PolicyNo","Insured","Relationship"].forEach(k => localStorage.removeItem(k+old));
   });
-
-  // Reassign indices and IDs, restore values, and rebind autosave
   snapshot.forEach((data, i)=>{
     const newIndex = i+1;
     const card = data.el;
     card.dataset.index = newIndex;
-    // Update heading text
     const titleSpan = card.querySelector("h3 span");
     if(titleSpan) titleSpan.textContent = "Policy Entry " + newIndex;
 
-    // Update IDs on inputs/selects
     const pn = card.querySelector(`[id^="PolicyNo"]`);
     const iname = card.querySelector(`[id^="Insured"]`);
     const rel = card.querySelector(`[id^="Relationship"]`);
-    pn.id = "PolicyNo"+newIndex;
-    pn.setAttribute("placeholder","PolicyNo"+newIndex);
-    iname.id = "Insured"+newIndex;
-    iname.setAttribute("placeholder","Insured"+newIndex);
+    pn.id = "PolicyNo"+newIndex; pn.setAttribute("placeholder","PolicyNo"+newIndex);
+    iname.id = "Insured"+newIndex; iname.setAttribute("placeholder","Insured"+newIndex);
     rel.id = "Relationship"+newIndex;
 
-    // Rebind uppercase + autosave
     iname.removeEventListener("input", iname._upperListener || (()=>{}));
     const upperListener = ()=>{ iname.value = iname.value.toUpperCase(); saveElValue(iname); };
-    iname.addEventListener("input", upperListener);
-    iname._upperListener = upperListener;
+    iname.addEventListener("input", upperListener); iname._upperListener = upperListener;
 
-    [pn, rel].forEach(el=>{
-      el.replaceWith(el.cloneNode(true)); // remove previous listeners cleanly
-    });
-
-    // Requery after clone
+    [pn, rel].forEach(el=>{ el.replaceWith(el.cloneNode(true)); });
     const pn2 = card.querySelector("#PolicyNo"+newIndex);
     const rel2 = card.querySelector("#Relationship"+newIndex);
 
-    // Restore captured values and save into new keys
     pn2.value = data.PolicyNo || "";
     iname.value = (data.Insured || "").toUpperCase();
     rel2.value = data.Relationship || "";
 
-    autoBindSave(pn2);
-    autoBindSave(iname);
-    autoBindSave(rel2);
-
+    autoBindSave(pn2); autoBindSave(iname); autoBindSave(rel2);
     localStorage.setItem("PolicyNo"+newIndex, pn2.value);
     localStorage.setItem("Insured"+newIndex, iname.value);
     localStorage.setItem("Relationship"+newIndex, rel2.value);
   });
-
-  // Update policyCount in storage
   policyCount = snapshot.length;
   localStorage.setItem("policyCount", policyCount);
 }
-
-/* Add policy button */
 addPolicyBtn.addEventListener("click", addPolicy);
 
 /* ---------- CARD details enhancements ---------- */
-// Name on card uppercase
 $("CardName").addEventListener("input", (e)=>{ e.target.value = e.target.value.toUpperCase(); saveElValue(e.target); });
-
-// Card number inputs with auto-jump & paste split + autosave
 const cardDigits = [ $("CardNo_1"), $("CardNo_2"), $("CardNo_3"), $("CardNo_4") ];
 cardDigits.forEach((el, idx)=>{
   autoBindSave(el);
@@ -681,8 +619,6 @@ cardDigits.forEach((el, idx)=>{
     for(let i=0;i<4;i++){ if(cardDigits[i].value.length<4){ cardDigits[i].focus(); break; } if(i===3) cardDigits[3].focus(); }
   });
 });
-
-// Expiry selectors
 (function populateExpirySelectors(){
   const mmSel = $("CardExpry_M_Select");
   const months = [
@@ -697,19 +633,16 @@ cardDigits.forEach((el, idx)=>{
     mmSel.appendChild(opt);
   });
   autoBindSave(mmSel);
-
   const yySel = $("CardExpry_Y_Select");
   const currentYear = new Date().getFullYear();
   for(let y=currentYear; y<=currentYear+15; y++){
     const opt=document.createElement("option");
-    opt.value = String(y).slice(-2); // store 2-digit for PDF
-    opt.textContent = String(y);     // show full year
+    opt.value = String(y).slice(-2);
+    opt.textContent = String(y);
     yySel.appendChild(opt);
   }
   autoBindSave(yySel);
 })();
-
-// Issuing bank dropdown (uppercase)
 (function populateBanks(){
   const banks = [
     "MAYBANK","CIMB BANK","PUBLIC BANK","RHB BANK","HONG LEONG BANK","AMBANK",
@@ -724,221 +657,193 @@ cardDigits.forEach((el, idx)=>{
   autoBindSave(sel);
 })();
 
-
-// Populate DOB dropdowns for Third Party
+/* Populate DOB dropdowns for Third Party */
 (function populateDOB(){
   const daySel = $("Text28");
   daySel.innerHTML = '<option value="">-- Day --</option>';
-  for(let d=1; d<=31; d++){
-    const val = String(d).padStart(2,'0');
-    daySel.innerHTML += `<option value="${val}">${val}</option>`;
-  }
+  for(let d=1; d<=31; d++){ const val = String(d).padStart(2,'0'); daySel.innerHTML += `<option value="${val}">${val}</option>`; }
   autoBindSave(daySel);
-
   const monthSel = $("Text29");
   monthSel.innerHTML = '<option value="">-- Month --</option>';
   const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-  months.forEach((m,i)=>{
-    const val = String(i+1).padStart(2,'0');
-    monthSel.innerHTML += `<option value="${val}">${val} - ${m}</option>`;
-  });
+  months.forEach((m,i)=>{ const val = String(i+1).padStart(2,'0'); monthSel.innerHTML += `<option value="${val}">${val} - ${m}</option>`; });
   autoBindSave(monthSel);
 })();
 
-
-  // Show/hide logic for Section C
+/* Section C: show/hide + uppercase */
 function updateThirdPPUI(){
   $("thirdPP_ic_wrap").style.display = $("ThirdPP_Yes").checked ? "block" : "none";
   $("thirdPP_fields").style.display = ($("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked) ? "block" : "none";
 }
-
-// Auto-uppercase all inputs in Section C except email
 document.querySelectorAll("#sectionC input[type=text], #sectionC input[type=tel], #sectionC input[type=number]").forEach(inp=>{
-  if (inp.id.toLowerCase().includes("email")) return; // skip email
-  inp.addEventListener("input", ()=>{
-    inp.value = inp.value.toUpperCase();
-    saveElValue(inp);
-  });
+  if (inp.id.toLowerCase().includes("email")) return;
+  inp.addEventListener("input", ()=>{ inp.value = inp.value.toUpperCase(); saveElValue(inp); });
 });
-  
-// Bind events for toggling
 ["ThirdPP_Yes","ThirdPP_SubmittedNRIC"].forEach(id=>{
   const el = $(id);
-  autoBindSave(el); // so state is saved to localStorage
+  autoBindSave(el);
   el.addEventListener("change", ()=>{
-    updateThirdPPUI();
-    saveElValue(el);
-    // Also update Section E payor section
-    updatePayorSectionUI();
+    updateThirdPPUI(); saveElValue(el); updatePayorSectionUI();
   });
 });
-
-// Run once on page load to restore correct visibility
 updateThirdPPUI();
-  
-/* --- Section E: New Logic --- */
+
+/* Section E: Meta fields + states/dates */
 const signOwnerName = $("Sign_OwnerName");
 const sameAsCardOwner = $("SameAsCardOwner");
 const cardName = $("CardName");
-
-// Auto-fill owner name from card name
 sameAsCardOwner.addEventListener("change", () => {
-    if (sameAsCardOwner.checked) {
-        signOwnerName.value = cardName.value.toUpperCase();
-        signOwnerName.disabled = true;
-    } else {
-        signOwnerName.value = "";
-        signOwnerName.disabled = false;
-    }
-    saveElValue(signOwnerName);
+  if (sameAsCardOwner.checked) { signOwnerName.value = cardName.value.toUpperCase(); signOwnerName.disabled = true; }
+  else { signOwnerName.value = ""; signOwnerName.disabled = false; }
+  saveElValue(signOwnerName);
 });
-
-// Sync owner name if card name changes
 cardName.addEventListener("input", () => {
-    if (sameAsCardOwner.checked) {
-        signOwnerName.value = cardName.value.toUpperCase();
-        saveElValue(signOwnerName);
-    }
+  if (sameAsCardOwner.checked) { signOwnerName.value = cardName.value.toUpperCase(); saveElValue(signOwnerName); }
 });
-
-// Populate State dropdown
 (function populateStates() {
-    const states = ["SELANGOR", "K.LUMPUR", "MELAKA", "N.SEMBILAN", "JOHOR", "PERAK", "KEDAH", "PULAU PINANG", "KELANTAN", "TERENGGANU", "PAHANG", "PERLIS", "SABAH", "SARAWAK"];
-    const select = $("Sign_State_Select");
-    states.forEach(s => {
-        const o = document.createElement("option");
-        o.value = s;
-        o.textContent = s;
-        select.appendChild(o);
-    });
-    autoBindSave(select);
+  const states = ["SELANGOR", "K.LUMPUR", "MELAKA", "N.SEMBILAN", "JOHOR", "PERAK", "KEDAH", "PULAU PINANG", "KELANTAN", "TERENGGANU", "PAHANG", "PERLIS", "SABAH", "SARAWAK"];
+  const select = $("Sign_State_Select");
+  states.forEach(s => { const o = document.createElement("option"); o.value = s; o.textContent = s; select.appendChild(o); });
+  autoBindSave(select);
 })();
-
-// Populate Date and Year dropdowns
 (function populateSignDate() {
-    const dateSelect = $("Sign_Date_Select");
-    dateSelect.innerHTML = '<option value="">-- DD --</option>';
-    for (let d = 1; d <= 31; d++) {
-        const val = String(d).padStart(2, '0');
-        dateSelect.innerHTML += `<option value="${val}">${val}</option>`;
-    }
-    autoBindSave(dateSelect);
-
-    const monthSelect = $("Sign_Month_Select");
-    monthSelect.innerHTML = '<option value="">-- MM --</option>';
-    const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-    months.forEach((m,i)=>{
-      const val = String(i+1).padStart(2,'0');
-      monthSelect.innerHTML += `<option value="${val}">${val} - ${m}</option>`;
-    });
-    autoBindSave(monthSelect);
-
-    const yearSelect = $("Sign_Year_Select");
-    yearSelect.innerHTML = '<option value="">-- YYYY --</option>';
-    for (let y = 2025; y <= 2030; y++) {
-        yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
-    }
-    autoBindSave(yearSelect);
+  const dateSelect = $("Sign_Date_Select");
+  dateSelect.innerHTML = '<option value="">-- DD --</option>';
+  for (let d = 1; d <= 31; d++) { const val = String(d).padStart(2, '0'); dateSelect.innerHTML += `<option value="${val}">${val}</option>`; }
+  autoBindSave(dateSelect);
+  const monthSelect = $("Sign_Month_Select");
+  monthSelect.innerHTML = '<option value="">-- MM --</option>';
+  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  months.forEach((m,i)=>{ const val = String(i+1).padStart(2,'0'); monthSelect.innerHTML += `<option value="${val}">${val} - ${m}</option>`; });
+  autoBindSave(monthSelect);
+  const yearSelect = $("Sign_Year_Select");
+  yearSelect.innerHTML = '<option value="">-- YYYY --</option>';
+  for (let y = 2025; y <= 2030; y++) { yearSelect.innerHTML += `<option value="${y}">${y}</option>`; }
+  autoBindSave(yearSelect);
 })();
 
-/* --- Conditional Payor Section Logic --- */
+/* Payor section visibility + linking */
 const payorSection = $("payorSignatureSection");
 const thirdPPYes = $("ThirdPP_Yes");
 const thirdPPSubmittedNRIC = $("ThirdPP_SubmittedNRIC");
-
 const signPayorName = $("Sign_PayorName");
 const sameAsThirdPartyPayorName = $("SameAsThirdPartyPayorName");
 const thirdPPName = $("ThirdPP_Name");
-
 const signPayorNIRC = $("Sign_PayorNIRC");
 const sameAsThirdPartyPayorNIRC = $("SameAsThirdPartyPayorNIRC");
 const thirdPPNIRC = $("ThirdPP_NIRC");
-
 function updatePayorSectionUI() {
-    const isPayorVisible = thirdPPYes.checked && thirdPPSubmittedNRIC.checked;
-    payorSection.style.display = isPayorVisible ? "block" : "none";
+  const isPayorVisible = thirdPPYes.checked && thirdPPSubmittedNRIC.checked;
+  payorSection.style.display = isPayorVisible ? "block" : "none";
 }
-
 thirdPPYes.addEventListener("change", updatePayorSectionUI);
 thirdPPSubmittedNRIC.addEventListener("change", updatePayorSectionUI);
-
-// Auto-fill Payor Name
 sameAsThirdPartyPayorName.addEventListener("change", () => {
-    if (sameAsThirdPartyPayorName.checked) {
-        signPayorName.value = thirdPPName.value.toUpperCase();
-        signPayorName.disabled = true;
-    } else {
-        signPayorName.value = "";
-        signPayorName.disabled = false;
-    }
-    saveElValue(signPayorName);
+  if (sameAsThirdPartyPayorName.checked) { signPayorName.value = thirdPPName.value.toUpperCase(); signPayorName.disabled = true; }
+  else { signPayorName.value = ""; signPayorName.disabled = false; }
+  saveElValue(signPayorName);
 });
-
-// Auto-fill Payor NRIC
 sameAsThirdPartyPayorNIRC.addEventListener("change", () => {
-    if (sameAsThirdPartyPayorNIRC.checked) {
-        signPayorNIRC.value = thirdPPNIRC.value;
-        signPayorNIRC.disabled = true;
-    } else {
-        signPayorNIRC.value = "";
-        signPayorNIRC.disabled = false;
-    }
-    saveElValue(signPayorNIRC);
+  if (sameAsThirdPartyPayorNIRC.checked) { signPayorNIRC.value = thirdPPNIRC.value; signPayorNIRC.disabled = true; }
+  else { signPayorNIRC.value = ""; signPayorNIRC.disabled = false; }
+  saveElValue(signPayorNIRC);
 });
-
-// Sync Payor Name and NRIC if source fields change
 thirdPPName.addEventListener("input", () => {
-    if (sameAsThirdPartyPayorName.checked) {
-        signPayorName.value = thirdPPName.value.toUpperCase();
-        saveElValue(signPayorName);
-    }
+  if (sameAsThirdPartyPayorName.checked) { signPayorName.value = thirdPPName.value.toUpperCase(); saveElValue(signPayorName); }
 });
-
 thirdPPNIRC.addEventListener("input", () => {
-    if (sameAsThirdPartyPayorNIRC.checked) {
-        signPayorNIRC.value = thirdPPNIRC.value;
-        saveElValue(signPayorNIRC);
-    }
+  if (sameAsThirdPartyPayorNIRC.checked) { signPayorNIRC.value = thirdPPNIRC.value; saveElValue(signPayorNIRC); }
 });
-
-// Initial update on page load
 updatePayorSectionUI();
 
-/* --- Signature Pad Logic (from EPP web filler) --- */
-const canvasOwner = $("signatureCanvasOwner");
-const signaturePadOwner = new SignaturePad(canvasOwner, {
-  backgroundColor: 'rgb(255, 255, 255)'
-});
+/* ---------- SIGNATURE MODAL LOGIC (Owner + Payor) ---------- */
+let sigTarget = null;
+const sigModal = $("sigModal");
+const sigCanvas = $("sigCanvas");
+const sigCtx = sigCanvas.getContext("2d");
+let drawing = false;
 
-const canvasPayor = $("signatureCanvasPayor");
-const signaturePadPayor = new SignaturePad(canvasPayor, {
-  backgroundColor: 'rgb(255, 255, 255)'
-});
+function openSig(target){
+  sigTarget = target; // 'owner' | 'payor'
+  $("sigModalTitle").textContent = target === 'owner' ? "Sign: Policy Owner" : "Sign: Payor";
+  // Reset canvas to white background
+  sigCtx.fillStyle = "#fff";
+  sigCtx.fillRect(0,0,sigCanvas.width, sigCanvas.height);
 
-// Clear buttons
-$("clearSigOwner").addEventListener("click", () => {
-  signaturePadOwner.clear();
-});
+  // If there is an existing signature, show it as a faint background for editing continuity
+  const existing = localStorage.getItem("sig_"+target);
+  if (existing){
+    const img = new Image();
+    img.onload = ()=> sigCtx.drawImage(img, 0, 0, sigCanvas.width, sigCanvas.height);
+    img.src = existing;
+  }
 
-$("clearSigPayor").addEventListener("click", () => {
-  signaturePadPayor.clear();
-});
-
-// Resize function (adapted for two pads)
-function resizeCanvases() {
-  const ratio = Math.max(window.devicePixelRatio || 1, 1);
-  canvasOwner.width = canvasOwner.offsetWidth * ratio;
-  canvasOwner.height = canvasOwner.offsetHeight * ratio;
-  canvasOwner.getContext("2d").scale(ratio, ratio);
-  signaturePadOwner.clear(); 
-
-  canvasPayor.width = canvasPayor.offsetWidth * ratio;
-  canvasPayor.height = canvasPayor.offsetHeight * ratio;
-  canvasPayor.getContext("2d").scale(ratio, ratio);
-  signaturePadPayor.clear();
+  sigModal.style.display = "block";
+  sigModal.setAttribute("aria-hidden", "false");
 }
-window.addEventListener("resize", resizeCanvases);
-resizeCanvases();
+$("sigClear").addEventListener("click", ()=>{
+  sigCtx.clearRect(0,0,sigCanvas.width, sigCanvas.height);
+  sigCtx.fillStyle="#fff"; sigCtx.fillRect(0,0,sigCanvas.width, sigCanvas.height);
+});
+$("sigCancel").addEventListener("click", closeSigModal);
+function closeSigModal(){
+  sigModal.style.display = "none";
+  sigModal.setAttribute("aria-hidden", "true");
+  sigTarget = null;
+}
+$("sigDone").addEventListener("click", ()=>{
+  if(!sigTarget) return;
+  const dataURL = sigCanvas.toDataURL("image/png");
+  localStorage.setItem("sig_"+sigTarget, dataURL);
+  const preview = $("preview_"+sigTarget);
+  preview.innerHTML = `<img alt="Signature ${sigTarget}" src="${dataURL}">`;
+  closeSigModal();
+});
+
+/* Drawing events (mouse + touch) */
+function getPos(e){
+  const rect = sigCanvas.getBoundingClientRect();
+  if(e.touches && e.touches[0]){
+    return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+  }
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+function startDraw(e){ drawing = true; sigCtx.beginPath(); const {x,y}=getPos(e); sigCtx.moveTo(x,y); e.preventDefault(); }
+function endDraw(){ drawing = false; sigCtx.beginPath(); }
+function moveDraw(e){
+  if(!drawing) return;
+  const {x,y} = getPos(e);
+  sigCtx.lineWidth = 2;
+  sigCtx.lineCap = "round";
+  sigCtx.strokeStyle = "#000";
+  sigCtx.lineTo(x,y);
+  sigCtx.stroke();
+  sigCtx.beginPath();
+  sigCtx.moveTo(x,y);
+  e.preventDefault();
+}
+sigCanvas.addEventListener("mousedown", startDraw);
+sigCanvas.addEventListener("mousemove", moveDraw);
+window.addEventListener("mouseup", endDraw);
+sigCanvas.addEventListener("touchstart", startDraw, {passive:false});
+sigCanvas.addEventListener("touchmove", moveDraw, {passive:false});
+sigCanvas.addEventListener("touchend", endDraw);
+
+/* Clear preview buttons + restore previews on load */
+$("clearPreviewOwner").addEventListener("click", ()=>{
+  localStorage.removeItem("sig_owner");
+  $("preview_owner").innerHTML = `<span>Tap to Sign (Owner)</span>`;
+});
+$("clearPreviewPayor").addEventListener("click", ()=>{
+  localStorage.removeItem("sig_payor");
+  $("preview_payor").innerHTML = `<span>Tap to Sign (Payor)</span>`;
+});
+window.addEventListener("DOMContentLoaded", ()=>{
+  ["owner","payor"].forEach(role=>{
+    const saved = localStorage.getItem("sig_"+role);
+    if(saved){ $("preview_"+role).innerHTML = `<img alt="Signature ${role}" src="${saved}">`; }
+  });
+});
 
 /* ---------- Restore on load ---------- */
 (function restoreAll(){
@@ -947,13 +852,9 @@ resizeCanvases();
       autoBindSave(el);
     }
   });
+  restoreOneTimeState(); updateThirdPPUI(); updatePayorSectionUI();
 
-  restoreOneTimeState();
-  updateThirdPPUI();
-  updatePayorSectionUI();
-
-  policiesContainer.innerHTML = "";
-  policyCount = 0;
+  policiesContainer.innerHTML = ""; policyCount = 0;
   const savedCount = Math.max(1, Math.min(parseInt(localStorage.getItem("policyCount")) || 1, MAX_POLICIES));
   for(let i=1;i<=savedCount;i++){ addPolicy(); }
 
@@ -993,8 +894,7 @@ async function fillPDF(){
     // HEADER
     safeCheck(form, "CCAgree", $("CCAgree").checked);
     safeCheck(form, "Onetimecharge_tick", $("Onetimecharge_tick").checked);
-    
-    // One-time charge radio logic
+
     if ($("Onetimecharge_tick").checked) {
       if ($("Onetimecharge_alloutstanding").checked) {
         safeCheck(form, "Onetimecharge_alloutstanding", true);
@@ -1008,7 +908,7 @@ async function fillPDF(){
       safeSetText(form, "Onetimecharge_amt", "");
     }
 
-    // SECTION A — existing entries only (contiguous after renumber)
+    // SECTION A
     const created = policiesContainer.querySelectorAll(".policy");
     created.forEach(p => {
       const idx = p.dataset.index;
@@ -1025,7 +925,7 @@ async function fillPDF(){
     safeSetText(form, "CardName", $("CardName").value || "");
     writeCardToPdf(form);
 
-    // Expiry -> split to CardExpry_M1/M2 & Y1/Y2 (2-digit year mapping)
+    // Expiry split
     const mm = ($("CardExpry_M_Select").value || "").padStart(2,' ');
     const yy = ($("CardExpry_Y_Select").value || "").padStart(2,' ');
     safeSetText(form, "CardExpry_M1", mm[0] || "");
@@ -1039,7 +939,7 @@ async function fillPDF(){
     safeCheck(form, "Visa_Tick", $("Visa_Tick").checked);
     safeCheck(form, "Master_Tick", $("Master_Tick").checked);
 
-    // SIGNATURE meta fields
+    // SIGN META
     safeSetText(form, "Sign_OwnerName", $("Sign_OwnerName").value || "");
     safeSetText(form, "Sign_OwnerNIRC", $("Sign_OwnerNIRC").value || "");
     safeSetText(form, "Sign_State", $("Sign_State_Select").value || "");
@@ -1048,63 +948,52 @@ async function fillPDF(){
     safeSetText(form, "Sign_Year", $("Sign_Year_Select").value || "");
 
     // THIRD PARTY SECTION
-safeCheck(form, "ThirdPP_Yes", $("ThirdPP_Yes").checked);
-safeCheck(form, "ThirdPP_SubmittedNRIC", $("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked);
-
-if ($("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked) {
-  [
-    "ThirdPP_Name","ThirdPP_NIRC","ThirdPP_Nationality","ThirdPP_CorrespAdd_Line1",
-    "ThirdPP_CorrespAdd_Line2","ThirdPP_CorrrepAdd_Postcode","ThirdPP_CorrespAdd_Country",
-    "ThirdPP_Email","ThirdPP_Phone","ThirdPP_Occupation","ThirdPP_Employer",
-    "ThirdPP_NatureBusiness","ThirdPP_Income",
-    "ThirdPP_SourceFund_Others_Write","ThirdPP_SourceWealth_Others_Write"
-  ].forEach(id=> safeSetText(form, id, $(id).value || ""));
-
-  safeSetText(form, "Text28", $("Text28").value || "");
-  safeSetText(form, "Text29", $("Text29").value || "");
-  safeSetText(form, "Text30", $("Text30").value || "");
-
-  [
-    "ThirdPP_SourceFund_Self","ThirdPP_SourceFund_Parent","ThirdPP_SourceFund_Spouse","ThirdPP_SourceFund_Others",
-    "ThirdPP_SourceWealth_EmployBus","ThirdPP_SourceWealth_Invest","ThirdPP_SourceWealth_Inherit","ThirdPP_SourceWealth_Savings",
-    "ThirdPP_SourceWealth_Parents","ThirdPP_SourceWealth_Spouse","ThirdPP_SourceWealth_Others"
-  ].forEach(id=> safeCheck(form, id, $(id).checked));
-}
-
-// PDPA
-safeCheck(form, "PDPA", $("PDPA").checked);
-
-
-    // Signature image embed for Policy Owner
-    if (!signaturePadOwner.isEmpty()) {
-        try {
-            const sigDataUrlOwner = signaturePadOwner.toDataURL("image/png");
-            const pngBytesOwner = await fetch(sigDataUrlOwner).then(r => r.arrayBuffer());
-            const pngOwner = await pdfDoc.embedPng(pngBytesOwner);
-            const pages = pdfDoc.getPages();
-            const pageIndex = Math.min(2, pages.length - 1); // page 3 (index 2)
-            const page = pages[pageIndex];
-            page.drawImage(pngOwner, { x: 360, y: 90, width: 160, height: 50 });
-        } catch (e) { /* ignore embed errors */
-            console.error("Owner signature embed failed:", e);
-        }
+    safeCheck(form, "ThirdPP_Yes", $("ThirdPP_Yes").checked);
+    safeCheck(form, "ThirdPP_SubmittedNRIC", $("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked);
+    if ($("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked) {
+      [
+        "ThirdPP_Name","ThirdPP_NIRC","ThirdPP_Nationality","ThirdPP_CorrespAdd_Line1",
+        "ThirdPP_CorrespAdd_Line2","ThirdPP_CorrrepAdd_Postcode","ThirdPP_CorrespAdd_Country",
+        "ThirdPP_Email","ThirdPP_Phone","ThirdPP_Occupation","ThirdPP_Employer",
+        "ThirdPP_NatureBusiness","ThirdPP_Income",
+        "ThirdPP_SourceFund_Others_Write","ThirdPP_SourceWealth_Others_Write"
+      ].forEach(id=> safeSetText(form, id, $(id).value || ""));
+      safeSetText(form, "Text28", $("Text28").value || "");
+      safeSetText(form, "Text29", $("Text29").value || "");
+      safeSetText(form, "Text30", $("Text30").value || "");
+      [
+        "ThirdPP_SourceFund_Self","ThirdPP_SourceFund_Parent","ThirdPP_SourceFund_Spouse","ThirdPP_SourceFund_Others",
+        "ThirdPP_SourceWealth_EmployBus","ThirdPP_SourceWealth_Invest","ThirdPP_SourceWealth_Inherit","ThirdPP_SourceWealth_Savings",
+        "ThirdPP_SourceWealth_Parents","ThirdPP_SourceWealth_Spouse","ThirdPP_SourceWealth_Others"
+      ].forEach(id=> safeCheck(form, id, $(id).checked));
     }
 
-    // Signature image embed for Payor (Conditional)
-    if ($("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked && !signaturePadPayor.isEmpty()) {
-        try {
-            const sigDataUrlPayor = signaturePadPayor.toDataURL("image/png");
-            const pngBytesPayor = await fetch(sigDataUrlPayor).then(r => r.arrayBuffer());
-            const pngPayor = await pdfDoc.embedPng(pngBytesPayor);
-            // Assuming the Payor signature field is on a specific location on the form
-            // You may need to adjust these coordinates (x, y)
-            const pages = pdfDoc.getPages();
-            const pageIndex = Math.min(2, pages.length - 1);
-            const page = pages[pageIndex];
-            page.drawImage(pngPayor, { x: 360, y: 150, width: 160, height: 50 });
-        } catch (e) { /* ignore embed errors */
-            console.error("Payor signature embed failed:", e);
-        }
+    // PDPA
+    safeCheck(form, "PDPA", $("PDPA").checked);
+
+    /* --------- SIGNATURE IMAGE EMBEDDING (embedPng + drawImage) --------- */
+    const pages = pdfDoc.getPages();
+    const pageIndex = Math.min(2, pages.length - 1); // Page 3 (index 2); adjust if needed
+    const page = pages[pageIndex];
+
+    // Owner signature (from localStorage -> PNG -> embedPng -> drawImage)
+    const sigOwner = localStorage.getItem("sig_owner");
+    if (sigOwner){
+      try{
+        const imgOwner = await pdfDoc.embedPng(sigOwner);
+        // Adjust x,y,width,height based on your PDF coordinates
+        page.drawImage(imgOwner, { x: 360, y: 90, width: 160, height: 50 });
+      } catch(e){ console.error("Owner signature embed failed:", e); }
+    }
+
+    // Payor signature (only if payor section is relevant)
+    const sigPayor = localStorage.getItem("sig_payor");
+    if ($("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked && sigPayor){
+      try{
+        const imgPayor = await pdfDoc.embedPng(sigPayor);
+        // Adjust x,y,width,height based on your PDF coordinates
+        page.drawImage(imgPayor, { x: 360, y: 150, width: 160, height: 50 });
+      } catch(e){ console.error("Payor signature embed failed:", e); }
     }
 
     // Save & download
@@ -1138,7 +1027,9 @@ function resetAll(){
        "ThirdPP_SourceWealth_EmployBus","ThirdPP_SourceWealth_Invest","ThirdPP_SourceWealth_Inherit","ThirdPP_SourceWealth_Savings",
        "ThirdPP_SourceWealth_Parents","ThirdPP_SourceWealth_Spouse","ThirdPP_SourceWealth_Others","ThirdPP_SourceWealth_Others_Write",
        "Sign_PayorName", "Sign_PayorNIRC", "SameAsThirdPartyPayorName", "SameAsThirdPartyPayorNIRC",
-       "PDPA"
+       "PDPA",
+       // NEW: signatures
+       "sig_owner", "sig_payor"
       ].includes(k)
     ){
       localStorage.removeItem(k);
@@ -1151,8 +1042,10 @@ function resetAll(){
     if(inp.id === "Onetimecharge_amt") inp.disabled = true;
   });
   document.querySelectorAll("select").forEach(s=> s.selectedIndex = 0);
-  signaturePadOwner.clear();
-  signaturePadPayor.clear();
+
+  // Clear signature previews
+  $("preview_owner").innerHTML = `<span>Tap to Sign (Owner)</span>`;
+  $("preview_payor").innerHTML = `<span>Tap to Sign (Payor)</span>`;
 
   // Rebuild policies
   policiesContainer.innerHTML = "";
