@@ -93,6 +93,7 @@
     box-shadow:0 18px 50px rgba(0,0,0,.25)
   }
   .sig-modal h3{ margin:0 0 8px 0; }
+  /* NOTE: canvas is responsive via CSS; internal pixels are set in JS for crispness */
   #sigCanvas{ width:100%; height:220px; background:#fff; border:1px solid #ddd; border-radius:10px; touch-action:none }
   .sig-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:10px; }
 
@@ -336,7 +337,7 @@
     </label>
   </div>
 
-  <!-- NEW: Tap-to-sign previews (Owner + Payor) -->
+  <!-- Tap-to-sign previews (Owner + Payor) -->
   <h3>Policy Owner Signature</h3>
   <div class="sig-preview" id="preview_owner" onclick="openSig('owner')">
     <span>Tap to Sign (Owner)</span>
@@ -391,7 +392,8 @@
 <div id="sigModal" class="sig-modal" aria-hidden="true">
   <div class="box">
     <h3 id="sigModalTitle">Draw Signature</h3>
-    <canvas id="sigCanvas" width="1000" height="440"></canvas>
+    <!-- Responsive canvas: internal pixels are set in JS for crispness -->
+    <canvas id="sigCanvas"></canvas>
     <div class="sig-actions">
       <button id="sigDone" type="button">Done</button>
       <button id="sigClear" type="button" class="ghost">Clear</button>
@@ -718,7 +720,7 @@ cardName.addEventListener("input", () => {
   autoBindSave(monthSelect);
   const yearSelect = $("Sign_Year_Select");
   yearSelect.innerHTML = '<option value="">-- YYYY --</option>';
-  for (let y = 2025; y <= 2030; y++) { yearSelect.innerHTML += `<option value="${y}">${y}</option>`; }
+  for (let y = 2025; y <= 2030; y++) { yearSelect.innerHTML = yearSelect.innerHTML + `<option value="${y}">${y}</option>`; }
   autoBindSave(yearSelect);
 })();
 
@@ -756,34 +758,59 @@ thirdPPNIRC.addEventListener("input", () => {
 });
 updatePayorSectionUI();
 
-/* ---------- SIGNATURE MODAL LOGIC (Owner + Payor) ---------- */
+/* ---------- SIGNATURE MODAL LOGIC (Owner + Payor) with HiDPI scaling ---------- */
 let sigTarget = null;
 const sigModal = $("sigModal");
 const sigCanvas = $("sigCanvas");
 const sigCtx = sigCanvas.getContext("2d");
 let drawing = false;
+let scaleX = 1, scaleY = 1;
+
+/* Resize canvas to look crisp on any screen size & DPR */
+function resizeSigCanvas(){
+  const dpr = window.devicePixelRatio || 1;
+  const cssWidth = sigCanvas.clientWidth || sigCanvas.parentElement.clientWidth || 560;
+  const cssHeight = sigCanvas.clientHeight || 220;
+  sigCanvas.width = Math.max(1, Math.floor(cssWidth * dpr));
+  sigCanvas.height = Math.max(1, Math.floor(cssHeight * dpr));
+  sigCtx.setTransform(1,0,0,1,0,0); // reset
+  sigCtx.scale(dpr, dpr);
+  sigCtx.lineWidth = 2;
+  sigCtx.lineCap = "round";
+  sigCtx.strokeStyle = "#000";
+  scaleX = sigCanvas.width / (sigCanvas.getBoundingClientRect().width || cssWidth);
+  scaleY = sigCanvas.height / (sigCanvas.getBoundingClientRect().height || cssHeight);
+  // White background (prevents transparent PNG on PDFs)
+  sigCtx.fillStyle = "#fff";
+  sigCtx.fillRect(0,0,sigCanvas.width/scaleX, sigCanvas.height/scaleY);
+}
 
 function openSig(target){
   sigTarget = target; // 'owner' | 'payor'
   $("sigModalTitle").textContent = target === 'owner' ? "Sign: Policy Owner" : "Sign: Payor";
-  // Reset canvas to white background
-  sigCtx.fillStyle = "#fff";
-  sigCtx.fillRect(0,0,sigCanvas.width, sigCanvas.height);
-
-  // If there is an existing signature, show it as a faint background for editing continuity
-  const existing = localStorage.getItem("sig_"+target);
-  if (existing){
-    const img = new Image();
-    img.onload = ()=> sigCtx.drawImage(img, 0, 0, sigCanvas.width, sigCanvas.height);
-    img.src = existing;
-  }
 
   sigModal.style.display = "block";
   sigModal.setAttribute("aria-hidden", "false");
+
+  // Next frame: ensure layout settled then resize canvas
+  requestAnimationFrame(()=>{
+    resizeSigCanvas();
+    // If there is an existing signature, draw it to current canvas size
+    const existing = localStorage.getItem("sig_"+target);
+    if (existing){
+      const img = new Image();
+      img.onload = ()=>{
+        // cover the canvas area with existing image
+        sigCtx.drawImage(img, 0, 0, sigCanvas.width/scaleX, sigCanvas.height/scaleY);
+      };
+      img.src = existing;
+    }
+  });
 }
 $("sigClear").addEventListener("click", ()=>{
   sigCtx.clearRect(0,0,sigCanvas.width, sigCanvas.height);
-  sigCtx.fillStyle="#fff"; sigCtx.fillRect(0,0,sigCanvas.width, sigCanvas.height);
+  // Repaint white bg in CSS pixels
+  sigCtx.fillStyle="#fff"; sigCtx.fillRect(0,0,sigCanvas.width/scaleX, sigCanvas.height/scaleY);
 });
 $("sigCancel").addEventListener("click", closeSigModal);
 function closeSigModal(){
@@ -800,27 +827,30 @@ $("sigDone").addEventListener("click", ()=>{
   closeSigModal();
 });
 
-/* Drawing events (mouse + touch) */
+/* Drawing (mouse + touch) with coordinate conversion */
 function getPos(e){
   const rect = sigCanvas.getBoundingClientRect();
   if(e.touches && e.touches[0]){
-    return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+    return { x: (e.touches[0].clientX - rect.left), y: (e.touches[0].clientY - rect.top) };
   }
-  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  return { x: (e.clientX - rect.left), y: (e.clientY - rect.top) };
 }
-function startDraw(e){ drawing = true; sigCtx.beginPath(); const {x,y}=getPos(e); sigCtx.moveTo(x,y); e.preventDefault(); }
+function startDraw(e){
+  drawing = true;
+  sigCtx.beginPath();
+  const {x,y}=getPos(e);
+  sigCtx.moveTo(x, y);
+  e.preventDefault?.();
+}
 function endDraw(){ drawing = false; sigCtx.beginPath(); }
 function moveDraw(e){
   if(!drawing) return;
   const {x,y} = getPos(e);
-  sigCtx.lineWidth = 2;
-  sigCtx.lineCap = "round";
-  sigCtx.strokeStyle = "#000";
-  sigCtx.lineTo(x,y);
+  sigCtx.lineTo(x, y);
   sigCtx.stroke();
   sigCtx.beginPath();
-  sigCtx.moveTo(x,y);
-  e.preventDefault();
+  sigCtx.moveTo(x, y);
+  e.preventDefault?.();
 }
 sigCanvas.addEventListener("mousedown", startDraw);
 sigCanvas.addEventListener("mousemove", moveDraw);
@@ -828,6 +858,17 @@ window.addEventListener("mouseup", endDraw);
 sigCanvas.addEventListener("touchstart", startDraw, {passive:false});
 sigCanvas.addEventListener("touchmove", moveDraw, {passive:false});
 sigCanvas.addEventListener("touchend", endDraw);
+window.addEventListener("resize", ()=> {
+  // Only resize when modal is open to avoid reflow glitches
+  if(sigModal.getAttribute("aria-hidden")==="false"){ 
+    const img = new Image();
+    img.onload = ()=>{
+      resizeSigCanvas();
+      sigCtx.drawImage(img, 0, 0, sigCanvas.width/scaleX, sigCanvas.height/scaleY);
+    };
+    img.src = sigCanvas.toDataURL("image/png");
+  }
+});
 
 /* Clear preview buttons + restore previews on load */
 $("clearPreviewOwner").addEventListener("click", ()=>{
@@ -976,12 +1017,12 @@ async function fillPDF(){
     const pageIndex = Math.min(2, pages.length - 1); // Page 3 (index 2); adjust if needed
     const page = pages[pageIndex];
 
-    // Owner signature (from localStorage -> PNG -> embedPng -> drawImage)
+    // Owner signature
     const sigOwner = localStorage.getItem("sig_owner");
     if (sigOwner){
       try{
         const imgOwner = await pdfDoc.embedPng(sigOwner);
-        // Adjust x,y,width,height based on your PDF coordinates
+        // Adjust x,y,width,height to match your PDF coordinates
         page.drawImage(imgOwner, { x: 360, y: 90, width: 160, height: 50 });
       } catch(e){ console.error("Owner signature embed failed:", e); }
     }
@@ -991,7 +1032,6 @@ async function fillPDF(){
     if ($("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked && sigPayor){
       try{
         const imgPayor = await pdfDoc.embedPng(sigPayor);
-        // Adjust x,y,width,height based on your PDF coordinates
         page.drawImage(imgPayor, { x: 360, y: 150, width: 160, height: 50 });
       } catch(e){ console.error("Payor signature embed failed:", e); }
     }
@@ -1028,7 +1068,7 @@ function resetAll(){
        "ThirdPP_SourceWealth_Parents","ThirdPP_SourceWealth_Spouse","ThirdPP_SourceWealth_Others","ThirdPP_SourceWealth_Others_Write",
        "Sign_PayorName", "Sign_PayorNIRC", "SameAsThirdPartyPayorName", "SameAsThirdPartyPayorNIRC",
        "PDPA",
-       // NEW: signatures
+       // signatures
        "sig_owner", "sig_payor"
       ].includes(k)
     ){
