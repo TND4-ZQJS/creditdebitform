@@ -226,13 +226,11 @@
 <section class="section" id="sectionC">
   <h2>Section C - Third Party / Source</h2>
 
-  <!-- Step 1 -->
   <label class="inline">
     <input id="ThirdPP_Yes" type="checkbox">
     <span>Payment by Third Party Payor (other than Policyowner)</span>
   </label>
 
-  <!-- Step 2 (hidden until Step 1 is checked) -->
   <div id="thirdPP_ic_wrap" style="display:none; margin-top:8px;">
     <label class="inline">
       <input id="ThirdPP_SubmittedNRIC" type="checkbox">
@@ -240,7 +238,6 @@
     </label>
   </div>
 
-  <!-- Step 3 fields (hidden until Step 2 is checked) -->
   <div id="thirdPP_fields" style="display:none; margin-top:14px;">
     <label>Third Party Payor’s Name
       <input id="ThirdPP_Name" type="text">
@@ -313,7 +310,6 @@
   </div>
 </section>
 
-<!-- Section D PDPA -->
 <section class="section" id="sectionD">
   <h2>Section D - PDPA</h2>
   <label class="inline">
@@ -322,38 +318,75 @@
   </label>
 </section>
 
-  <section class="section">
-    <h2>Section E - Signature</h2>
+<section class="section">
+  <h2>Section E — Signature</h2>
 
-    <div class="row">
-      <label style="flex:1">Signer (Owner) Name
-        <input id="Sign_OwnerName" type="text">
-      </label>
-      <label style="flex:1">Owner NRIC
-        <input id="Sign_OwnerNIRC" type="text">
+  <label>Policy Owner's Name
+    <input id="Sign_OwnerName" type="text">
+  </label>
+  <div class="row" style="margin-top: -10px; margin-bottom: 12px;">
+    <label class="inline">
+      <input type="checkbox" id="SameAsCardOwner">
+      <span>Same as Card owner</span>
+    </label>
+  </div>
+
+  <div class="row">
+    <label style="flex:1">IC No.
+      <input id="Sign_OwnerNIRC" type="text">
+    </label>
+    <label style="flex:1">Signed at (State)
+      <select id="Sign_State_Select">
+        <option value="">-- Select State --</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="row">
+    <label>Signed Date (DD)
+      <select id="Sign_Date_Select"></select>
+    </label>
+    <label>Signed Month
+      <select id="Sign_Month_Select"></select>
+    </label>
+    <label>Signed Year (YYYY)
+      <select id="Sign_Year_Select"></select>
+    </label>
+  </div>
+
+  <canvas id="signatureCanvasOwner" width="300" height="150"></canvas>
+  <div class="row">
+    <button id="clearSigOwner" class="secondary">Clear Signature</button>
+  </div>
+
+  <div id="payorSignatureSection" style="display:none; margin-top: 20px;">
+    <h3>Fill and Sign only if Payor is not Policy Owner</h3>
+    <label>Payor's Name
+      <input id="Sign_PayorName" type="text">
+    </label>
+    <div class="row" style="margin-top: -10px; margin-bottom: 12px;">
+      <label class="inline">
+        <input type="checkbox" id="SameAsThirdPartyPayorName">
+        <span>Same as Third Party Payor</span>
       </label>
     </div>
 
-    <div class="row">
-      <label>Sign Date (DD)
-        <input id="Sign_Date" maxlength="2" inputmode="numeric">
-      </label>
-      <label>Sign Month
-        <input id="Sign_Month" maxlength="2" inputmode="numeric">
-      </label>
-      <label>Sign Year (YYYY)
-        <input id="Sign_Year" maxlength="4" inputmode="numeric">
-      </label>
-      <label style="flex:1">State
-        <input id="Sign_State" type="text">
+    <label>Payor's IC No.
+      <input id="Sign_PayorNIRC" type="text">
+    </label>
+    <div class="row" style="margin-top: -10px; margin-bottom: 12px;">
+      <label class="inline">
+        <input type="checkbox" id="SameAsThirdPartyPayorNIRC">
+        <span>Same as Third Party Payor</span>
       </label>
     </div>
-  </section>
-
-  <canvas id="signatureCanvas"></canvas>
+    
+    <canvas id="signatureCanvasPayor" width="300" height="150"></canvas>
     <div class="row">
-      <button id="clearSig" class="secondary">Clear Signature</button>
+      <button id="clearSigPayor" class="secondary">Clear Signature</button>
     </div>
+  </div>
+</section>
 
   <section class="section actions">
     <button id="generate">Generate PDF</button>
@@ -368,6 +401,7 @@
 <div id="saveStatus">Saved</div>
 
 <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 <script>
 /* ---------- CONFIG ---------- */
 const PDF_FILENAME = "Credit Card Enrolment Form_LF4092_200524_fillable.pdf";
@@ -690,36 +724,6 @@ cardDigits.forEach((el, idx)=>{
   autoBindSave(sel);
 })();
 
-/* ---------- Signature Canvas ---------- */
-const canvas = $("signatureCanvas");
-const ctx = canvas.getContext("2d");
-function resizeCanvas(){
-  const ratio = Math.max(window.devicePixelRatio || 1, 1);
-  canvas.width = canvas.offsetWidth * ratio;
-  canvas.height = 150 * ratio;
-  canvas.style.height = "150px";
-  ctx.setTransform(1,0,0,1,0,0);
-  ctx.scale(ratio, ratio);
-  ctx.lineWidth = 2;
-  ctx.lineCap = "round";
-  ctx.strokeStyle = "#000";
-}
-resizeCanvas(); window.addEventListener("resize", resizeCanvas);
-let drawing=false;
-function pos(e){
-  const rect = canvas.getBoundingClientRect();
-  const cx = e.touches ? e.touches[0].clientX : e.clientX;
-  const cy = e.touches ? e.touches[0].clientY : e.clientY;
-  return { x: cx - rect.left, y: cy - rect.top };
-}
-canvas.addEventListener("mousedown", (e)=>{ drawing=true; const p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y);});
-canvas.addEventListener("mousemove", (e)=>{ if(!drawing) return; const p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke();});
-canvas.addEventListener("mouseup", ()=>drawing=false);
-canvas.addEventListener("mouseout", ()=>drawing=false);
-canvas.addEventListener("touchstart",(e)=>{ e.preventDefault(); drawing=true; const p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y);},{passive:false});
-canvas.addEventListener("touchmove",(e)=>{ e.preventDefault(); if(!drawing) return; const p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke();},{passive:false});
-canvas.addEventListener("touchend", ()=>drawing=false);
-$("clearSig").addEventListener("click", ()=>{ ctx.clearRect(0,0,canvas.width,canvas.height); });
 
 // Populate DOB dropdowns for Third Party
 (function populateDOB(){
@@ -757,7 +761,6 @@ document.querySelectorAll("#sectionC input[type=text], #sectionC input[type=tel]
   });
 });
   
-
 // Bind events for toggling
 ["ThirdPP_Yes","ThirdPP_SubmittedNRIC"].forEach(id=>{
   const el = $(id);
@@ -765,12 +768,178 @@ document.querySelectorAll("#sectionC input[type=text], #sectionC input[type=tel]
   el.addEventListener("change", ()=>{
     updateThirdPPUI();
     saveElValue(el);
+    // Also update Section E payor section
+    updatePayorSectionUI();
   });
 });
 
 // Run once on page load to restore correct visibility
 updateThirdPPUI();
   
+/* --- Section E: New Logic --- */
+const signOwnerName = $("Sign_OwnerName");
+const sameAsCardOwner = $("SameAsCardOwner");
+const cardName = $("CardName");
+
+// Auto-fill owner name from card name
+sameAsCardOwner.addEventListener("change", () => {
+    if (sameAsCardOwner.checked) {
+        signOwnerName.value = cardName.value.toUpperCase();
+        signOwnerName.disabled = true;
+    } else {
+        signOwnerName.value = "";
+        signOwnerName.disabled = false;
+    }
+    saveElValue(signOwnerName);
+});
+
+// Sync owner name if card name changes
+cardName.addEventListener("input", () => {
+    if (sameAsCardOwner.checked) {
+        signOwnerName.value = cardName.value.toUpperCase();
+        saveElValue(signOwnerName);
+    }
+});
+
+// Populate State dropdown
+(function populateStates() {
+    const states = ["SELANGOR", "K.LUMPUR", "MELAKA", "N.SEMBILAN", "JOHOR", "PERAK", "KEDAH", "PULAU PINANG", "KELANTAN", "TERENGGANU", "PAHANG", "PERLIS", "SABAH", "SARAWAK"];
+    const select = $("Sign_State_Select");
+    states.forEach(s => {
+        const o = document.createElement("option");
+        o.value = s;
+        o.textContent = s;
+        select.appendChild(o);
+    });
+    autoBindSave(select);
+})();
+
+// Populate Date and Year dropdowns
+(function populateSignDate() {
+    const dateSelect = $("Sign_Date_Select");
+    dateSelect.innerHTML = '<option value="">-- DD --</option>';
+    for (let d = 1; d <= 31; d++) {
+        const val = String(d).padStart(2, '0');
+        dateSelect.innerHTML += `<option value="${val}">${val}</option>`;
+    }
+    autoBindSave(dateSelect);
+
+    const monthSelect = $("Sign_Month_Select");
+    monthSelect.innerHTML = '<option value="">-- MM --</option>';
+    const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    months.forEach((m,i)=>{
+      const val = String(i+1).padStart(2,'0');
+      monthSelect.innerHTML += `<option value="${val}">${val} - ${m}</option>`;
+    });
+    autoBindSave(monthSelect);
+
+    const yearSelect = $("Sign_Year_Select");
+    yearSelect.innerHTML = '<option value="">-- YYYY --</option>';
+    for (let y = 2025; y <= 2030; y++) {
+        yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
+    }
+    autoBindSave(yearSelect);
+})();
+
+/* --- Conditional Payor Section Logic --- */
+const payorSection = $("payorSignatureSection");
+const thirdPPYes = $("ThirdPP_Yes");
+const thirdPPSubmittedNRIC = $("ThirdPP_SubmittedNRIC");
+
+const signPayorName = $("Sign_PayorName");
+const sameAsThirdPartyPayorName = $("SameAsThirdPartyPayorName");
+const thirdPPName = $("ThirdPP_Name");
+
+const signPayorNIRC = $("Sign_PayorNIRC");
+const sameAsThirdPartyPayorNIRC = $("SameAsThirdPartyPayorNIRC");
+const thirdPPNIRC = $("ThirdPP_NIRC");
+
+function updatePayorSectionUI() {
+    const isPayorVisible = thirdPPYes.checked && thirdPPSubmittedNRIC.checked;
+    payorSection.style.display = isPayorVisible ? "block" : "none";
+}
+
+thirdPPYes.addEventListener("change", updatePayorSectionUI);
+thirdPPSubmittedNRIC.addEventListener("change", updatePayorSectionUI);
+
+// Auto-fill Payor Name
+sameAsThirdPartyPayorName.addEventListener("change", () => {
+    if (sameAsThirdPartyPayorName.checked) {
+        signPayorName.value = thirdPPName.value.toUpperCase();
+        signPayorName.disabled = true;
+    } else {
+        signPayorName.value = "";
+        signPayorName.disabled = false;
+    }
+    saveElValue(signPayorName);
+});
+
+// Auto-fill Payor NRIC
+sameAsThirdPartyPayorNIRC.addEventListener("change", () => {
+    if (sameAsThirdPartyPayorNIRC.checked) {
+        signPayorNIRC.value = thirdPPNIRC.value;
+        signPayorNIRC.disabled = true;
+    } else {
+        signPayorNIRC.value = "";
+        signPayorNIRC.disabled = false;
+    }
+    saveElValue(signPayorNIRC);
+});
+
+// Sync Payor Name and NRIC if source fields change
+thirdPPName.addEventListener("input", () => {
+    if (sameAsThirdPartyPayorName.checked) {
+        signPayorName.value = thirdPPName.value.toUpperCase();
+        saveElValue(signPayorName);
+    }
+});
+
+thirdPPNIRC.addEventListener("input", () => {
+    if (sameAsThirdPartyPayorNIRC.checked) {
+        signPayorNIRC.value = thirdPPNIRC.value;
+        saveElValue(signPayorNIRC);
+    }
+});
+
+// Initial update on page load
+updatePayorSectionUI();
+
+/* --- Signature Pad Library --- */
+const canvasOwner = $("signatureCanvasOwner");
+const signaturePadOwner = new SignaturePad(canvasOwner, {
+    backgroundColor: 'rgb(255, 255, 255)'
+});
+
+const canvasPayor = $("signatureCanvasPayor");
+const signaturePadPayor = new SignaturePad(canvasPayor, {
+    backgroundColor: 'rgb(255, 255, 255)'
+});
+
+// Clear buttons
+$("clearSigOwner").addEventListener("click", () => {
+    signaturePadOwner.clear();
+});
+
+$("clearSigPayor").addEventListener("click", () => {
+    signaturePadPayor.clear();
+});
+
+// Resize function (adapted for two pads)
+function resizeCanvases() {
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    canvasOwner.width = canvasOwner.offsetWidth * ratio;
+    canvasOwner.height = canvasOwner.offsetHeight * ratio;
+    canvasOwner.getContext("2d").scale(ratio, ratio);
+    signaturePadOwner.clear();
+
+    canvasPayor.width = canvasPayor.offsetWidth * ratio;
+    canvasPayor.height = canvasPayor.offsetHeight * ratio;
+    canvasPayor.getContext("2d").scale(ratio, ratio);
+    signaturePadPayor.clear();
+}
+window.addEventListener("resize", resizeCanvases);
+resizeCanvases();
+
 /* ---------- Restore on load ---------- */
 (function restoreAll(){
   document.querySelectorAll("input,select,textarea").forEach(el=> {
@@ -780,6 +949,8 @@ updateThirdPPUI();
   });
 
   restoreOneTimeState();
+  updateThirdPPUI();
+  updatePayorSectionUI();
 
   policiesContainer.innerHTML = "";
   policyCount = 0;
@@ -871,10 +1042,10 @@ async function fillPDF(){
     // SIGNATURE meta fields
     safeSetText(form, "Sign_OwnerName", $("Sign_OwnerName").value || "");
     safeSetText(form, "Sign_OwnerNIRC", $("Sign_OwnerNIRC").value || "");
-    safeSetText(form, "Sign_Date", $("Sign_Date").value || "");
-    safeSetText(form, "Sign_Month", $("Sign_Month").value || "");
-    safeSetText(form, "Sign_Year", $("Sign_Year").value || "");
-    safeSetText(form, "Sign_State", $("Sign_State").value || "");
+    safeSetText(form, "Sign_State", $("Sign_State_Select").value || "");
+    safeSetText(form, "Sign_Date", $("Sign_Date_Select").value || "");
+    safeSetText(form, "Sign_Month", $("Sign_Month_Select").value || "");
+    safeSetText(form, "Sign_Year", $("Sign_Year_Select").value || "");
 
     // THIRD PARTY SECTION
 safeCheck(form, "ThirdPP_Yes", $("ThirdPP_Yes").checked);
@@ -903,24 +1074,37 @@ if ($("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked) {
 // PDPA
 safeCheck(form, "PDPA", $("PDPA").checked);
 
-    // Signature image embed (page 3 if exists; else last page)
-    const sigDataUrl = canvas.toDataURL("image/png");
-    let isBlank = true;
-    try {
-      const sample = ctx.getImageData(0,0,10,1).data;
-      for(let i=0;i<sample.length;i+=4){
-        if(!(sample[i]===255 && sample[i+1]===255 && sample[i+2]===255)){ isBlank=false; break; }
-      }
-    } catch(e){ isBlank=false; }
-    if(!isBlank){
-      try{
-        const pngBytes = await fetch(sigDataUrl).then(r=>r.arrayBuffer());
-        const png = await pdfDoc.embedPng(pngBytes);
-        const pages = pdfDoc.getPages();
-        const pageIndex = Math.min(2, pages.length-1); // page 3 (index 2)
-        const page = pages[pageIndex];
-        page.drawImage(png, { x: 360, y: 90, width: 160, height: 50 });
-      }catch(e){ /* ignore embed errors */ }
+
+    // Signature image embed for Policy Owner
+    if (!signaturePadOwner.isEmpty()) {
+        try {
+            const sigDataUrlOwner = signaturePadOwner.toDataURL("image/png");
+            const pngBytesOwner = await fetch(sigDataUrlOwner).then(r => r.arrayBuffer());
+            const pngOwner = await pdfDoc.embedPng(pngBytesOwner);
+            const pages = pdfDoc.getPages();
+            const pageIndex = Math.min(2, pages.length - 1); // page 3 (index 2)
+            const page = pages[pageIndex];
+            page.drawImage(pngOwner, { x: 360, y: 90, width: 160, height: 50 });
+        } catch (e) { /* ignore embed errors */
+            console.error("Owner signature embed failed:", e);
+        }
+    }
+
+    // Signature image embed for Payor (Conditional)
+    if ($("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked && !signaturePadPayor.isEmpty()) {
+        try {
+            const sigDataUrlPayor = signaturePadPayor.toDataURL("image/png");
+            const pngBytesPayor = await fetch(sigDataUrlPayor).then(r => r.arrayBuffer());
+            const pngPayor = await pdfDoc.embedPng(pngBytesPayor);
+            // Assuming the Payor signature field is on a specific location on the form
+            // You may need to adjust these coordinates (x, y)
+            const pages = pdfDoc.getPages();
+            const pageIndex = Math.min(2, pages.length - 1);
+            const page = pages[pageIndex];
+            page.drawImage(pngPayor, { x: 360, y: 150, width: 160, height: 50 });
+        } catch (e) { /* ignore embed errors */
+            console.error("Payor signature embed failed:", e);
+        }
     }
 
     // Save & download
@@ -946,11 +1130,15 @@ function resetAll(){
       k.startsWith("PolicyNo") || k.startsWith("Insured") || k.startsWith("Relationship") ||
       ["policyCount","CCAgree","Onetimecharge_tick","onetime_charge_option",
        "CardName","CardNo_1","CardNo_2","CardNo_3","CardNo_4","CardExpry_M_Select","CardExpry_Y_Select","CardBank_Select",
-       "CC_Tick","DebitC_Tick","Sign_OwnerName","Sign_OwnerNIRC","Sign_Date","Sign_Month","Sign_Year","Sign_State",
-       "ThirdPP_Yes","ThirdPP_Name","ThirdPP_Email",
+       "CC_Tick","DebitC_Tick", "SameAsCardOwner", "Sign_OwnerName", "Sign_OwnerNIRC", "Sign_State_Select", "Sign_Date_Select", "Sign_Month_Select", "Sign_Year_Select",
+       "ThirdPP_Yes","ThirdPP_SubmittedNRIC", "ThirdPP_Name","ThirdPP_NIRC", "ThirdPP_Nationality", "ThirdPP_CorrespAdd_Line1", "ThirdPP_CorrespAdd_Line2",
+       "ThirdPP_CorrrepAdd_Postcode", "ThirdPP_CorrespAdd_Country", "ThirdPP_Email", "ThirdPP_Phone", "ThirdPP_Occupation", "ThirdPP_Employer",
+       "ThirdPP_NatureBusiness", "ThirdPP_Income", "Text28", "Text29", "Text30",
        "ThirdPP_SourceFund_Self","ThirdPP_SourceFund_Parent","ThirdPP_SourceFund_Spouse","ThirdPP_SourceFund_Others","ThirdPP_SourceFund_Others_Write",
        "ThirdPP_SourceWealth_EmployBus","ThirdPP_SourceWealth_Invest","ThirdPP_SourceWealth_Inherit","ThirdPP_SourceWealth_Savings",
-       "ThirdPP_SourceWealth_Parents","ThirdPP_SourceWealth_Spouse","ThirdPP_SourceWealth_Others","ThirdPP_SourceWealth_Others_Write"
+       "ThirdPP_SourceWealth_Parents","ThirdPP_SourceWealth_Spouse","ThirdPP_SourceWealth_Others","ThirdPP_SourceWealth_Others_Write",
+       "Sign_PayorName", "Sign_PayorNIRC", "SameAsThirdPartyPayorName", "SameAsThirdPartyPayorNIRC",
+       "PDPA"
       ].includes(k)
     ){
       localStorage.removeItem(k);
@@ -963,7 +1151,8 @@ function resetAll(){
     if(inp.id === "Onetimecharge_amt") inp.disabled = true;
   });
   document.querySelectorAll("select").forEach(s=> s.selectedIndex = 0);
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+  signaturePadOwner.clear();
+  signaturePadPayor.clear();
 
   // Rebuild policies
   policiesContainer.innerHTML = "";
@@ -972,6 +1161,8 @@ function resetAll(){
   addPolicy();
 
   updateOneTimeUI();
+  updateThirdPPUI();
+  updatePayorSectionUI();
   showSaveStatus();
 }
 
