@@ -1012,44 +1012,51 @@ async function fillPDF(){
     // PDPA
     safeCheck(form, "PDPA", $("PDPA").checked);
 
-    /* --------- SIGNATURE IMAGE EMBEDDING (embedPng + drawImage) --------- */
-    const pages = pdfDoc.getPages();
-    const pageIndex = Math.min(2, pages.length - 1); // Page 3 (index 2); adjust if needed
-    const page = pages[pageIndex];
+   /* --------- SIGNATURE IMAGE EMBEDDING (embedPng + drawImage) --------- */
+const pages = pdfDoc.getPages();
+const pageIndex = Math.min(2, pages.length - 1); // Page 3 (index 2); adjust if needed
+const page = pages[pageIndex];
 
-    // Owner signature
-    const sigOwner = localStorage.getItem("sig_owner");
-    if (sigOwner){
-      try{
-        const imgOwner = await pdfDoc.embedPng(sigOwner);
-        // Adjust x,y,width,height to match your PDF coordinates
-        page.drawImage(imgOwner, { x: 360, y: 90, width: 160, height: 50 });
-      } catch(e){ console.error("Owner signature embed failed:", e); }
-    }
+// Define a maximum size for the signature box on the PDF
+const SIG_MAX_WIDTH = 160;
+const SIG_MAX_HEIGHT = 50;
 
-    // Payor signature (only if payor section is relevant)
-    const sigPayor = localStorage.getItem("sig_payor");
-    if ($("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked && sigPayor){
-      try{
-        const imgPayor = await pdfDoc.embedPng(sigPayor);
-        page.drawImage(imgPayor, { x: 360, y: 150, width: 160, height: 50 });
-      } catch(e){ console.error("Payor signature embed failed:", e); }
-    }
+// Owner signature
+const sigOwner = localStorage.getItem("sig_owner");
+if (sigOwner) {
+  try {
+    const imgOwner = await pdfDoc.embedPng(sigOwner);
+    const { width: originalWidth, height: originalHeight } = imgOwner.scaleToFit(SIG_MAX_WIDTH, SIG_MAX_HEIGHT);
 
-    // Save & download
-    const pdfBytes = await pdfDoc.save();
-    const blob = new Blob([pdfBytes], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = "Filled_Credit_Card_Form.pdf"; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=> URL.revokeObjectURL(url), 2500);
+    // To prevent the signature from being placed off-center, you can calculate the x-coordinate
+    const xOwner = 360 + (SIG_MAX_WIDTH - originalWidth) / 2; // Adjust x to center it
+    const yOwner = 90 + (SIG_MAX_HEIGHT - originalHeight) / 2; // Adjust y to center it
 
-  } catch(err){
-    alert("PDF generation failed: " + (err.message || err));
-    console.error(err);
-  } finally {
-    $("generate").disabled = false;
+    // Embed the image using the new calculated dimensions
+    page.drawImage(imgOwner, { x: xOwner, y: yOwner, width: originalWidth, height: originalHeight });
+
+  } catch (e) {
+    console.error("Owner signature embed failed:", e);
   }
 }
+
+// Payor signature
+const sigPayor = localStorage.getItem("sig_payor");
+if ($("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked && sigPayor) {
+  try {
+    const imgPayor = await pdfDoc.embedPng(sigPayor);
+    const { width: originalWidth, height: originalHeight } = imgPayor.scaleToFit(SIG_MAX_WIDTH, SIG_MAX_HEIGHT);
+
+    const xPayor = 360 + (SIG_MAX_WIDTH - originalWidth) / 2;
+    const yPayor = 150 + (SIG_MAX_HEIGHT - originalHeight) / 2;
+
+    page.drawImage(imgPayor, { x: xPayor, y: yPayor, width: originalWidth, height: originalHeight });
+
+  } catch (e) {
+    console.error("Payor signature embed failed:", e);
+  }
+}
+
 
 /* ---------- Reset All ---------- */
 function resetAll(){
