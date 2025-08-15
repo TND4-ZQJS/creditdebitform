@@ -904,38 +904,38 @@ thirdPPNIRC.addEventListener("input", () => {
 // Initial update on page load
 updatePayorSectionUI();
 
-/* --- Signature Pad Library --- */
+/* --- Signature Pad Logic (from EPP web filler) --- */
 const canvasOwner = $("signatureCanvasOwner");
 const signaturePadOwner = new SignaturePad(canvasOwner, {
-    backgroundColor: 'rgb(255, 255, 255)'
+  backgroundColor: 'rgb(255, 255, 255)'
 });
 
 const canvasPayor = $("signatureCanvasPayor");
 const signaturePadPayor = new SignaturePad(canvasPayor, {
-    backgroundColor: 'rgb(255, 255, 255)'
+  backgroundColor: 'rgb(255, 255, 255)'
 });
 
 // Clear buttons
 $("clearSigOwner").addEventListener("click", () => {
-    signaturePadOwner.clear();
+  signaturePadOwner.clear();
 });
 
 $("clearSigPayor").addEventListener("click", () => {
-    signaturePadPayor.clear();
+  signaturePadPayor.clear();
 });
 
 // Resize function (adapted for two pads)
 function resizeCanvases() {
-    const ratio = Math.max(window.devicePixelRatio || 1, 1);
-    canvasOwner.width = canvasOwner.offsetWidth * ratio;
-    canvasOwner.height = canvasOwner.offsetHeight * ratio;
-    canvasOwner.getContext("2d").scale(ratio, ratio);
-    signaturePadOwner.clear();
+  const ratio = Math.max(window.devicePixelRatio || 1, 1);
+  canvasOwner.width = canvasOwner.offsetWidth * ratio;
+  canvasOwner.height = canvasOwner.offsetHeight * ratio;
+  canvasOwner.getContext("2d").scale(ratio, ratio);
+  signaturePadOwner.clear(); 
 
-    canvasPayor.width = canvasPayor.offsetWidth * ratio;
-    canvasPayor.height = canvasPayor.offsetHeight * ratio;
-    canvasPayor.getContext("2d").scale(ratio, ratio);
-    signaturePadPayor.clear();
+  canvasPayor.width = canvasPayor.offsetWidth * ratio;
+  canvasPayor.height = canvasPayor.offsetHeight * ratio;
+  canvasPayor.getContext("2d").scale(ratio, ratio);
+  signaturePadPayor.clear();
 }
 window.addEventListener("resize", resizeCanvases);
 resizeCanvases();
