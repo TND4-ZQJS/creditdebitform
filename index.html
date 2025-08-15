@@ -383,6 +383,32 @@
     <button id="resetAll" class="secondary">Reset All</button>
   </section>
 
+  <div class="sig-controls">
+  <h3>Owner Signature</h3>
+  <label>
+    X: <input type="number" id="sigX_owner" value="360" />
+  </label>
+  <label>
+    Y: <input type="number" id="sigY_owner" value="90" />
+  </label>
+  <label>
+    Scale (%): <input type="number" id="sigScale_owner" value="100" />
+  </label>
+</div>
+
+<div class="sig-controls">
+  <h3>Payor Signature</h3>
+  <label>
+    X: <input type="number" id="sigX_payor" value="360" />
+  </label>
+  <label>
+    Y: <input type="number" id="sigY_payor" value="60" />
+  </label>
+  <label>
+    Scale (%): <input type="number" id="sigScale_payor" value="100" />
+  </label>
+</div>
+
   <footer>
     <small>Make sure <code>Credit Card Enrolment Form_LF4092_200524_fillable.pdf</code> is in the same folder.</small>
   </footer>
@@ -1018,42 +1044,75 @@ async function fillPDF(){
     const page = pages[pageIndex];
 
     // Owner signature
-    // Example: draw Owner Signature
+    // Example: draw Owner Signature// Owner signature
 const sigOwner = localStorage.getItem("sig_owner");
-if (sigOwner){
+if (sigOwner) {
   try {
     const imgOwner = await pdfDoc.embedPng(sigOwner);
     const { width, height } = imgOwner.size();
 
-    // Scale down to fit inside preview box dimensions
     const previewEl = document.getElementById("preview_owner");
     const boxW = previewEl.offsetWidth;
     const boxH = previewEl.offsetHeight;
 
-    // maintain aspect ratio
-    let drawW = width, drawH = height;
     const scale = Math.min(boxW / width, boxH / height);
-    drawW = width * scale;
-    drawH = height * scale;
+    let drawW = width * scale;
+    let drawH = height * scale;
+
+    const scalePct = parseInt(document.getElementById("sigScale_owner").value, 10) || 100;
+    const factor = scalePct / 100;
+
+    drawW *= factor;
+    drawH *= factor;
+
+    const posX = parseInt(document.getElementById("sigX_owner").value, 10) || 0;
+    const posY = parseInt(document.getElementById("sigY_owner").value, 10) || 0;
 
     page.drawImage(imgOwner, {
-      x: 360,   // adjust PDF x position
-      y: 90,    // adjust PDF y position
+      x: posX,
+      y: posY,
       width: drawW,
       height: drawH
     });
-  } catch(e){ console.error(e); }
+  } catch (e) {
+    console.error(e);
+  }
 }
 
-    // Payor signature (only if payor section is relevant)
-    const sigPayor = localStorage.getItem("sig_payor");
-    if ($("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked && sigPayor){
-      try{
-        const imgPayor = await pdfDoc.embedPng(sigPayor);
-        page.drawImage(imgPayor, { x: 360, y: 150, width: 160, height: 50 });
-      } catch(e){ console.error("Payor signature embed failed:", e); }
-    }
+// Payor signature
+const sigPayor = localStorage.getItem("sig_payor");
+if (sigPayor) {
+  try {
+    const imgPayor = await pdfDoc.embedPng(sigPayor);
+    const { width, height } = imgPayor.size();
 
+    const previewEl = document.getElementById("preview_payor");
+    const boxW = previewEl.offsetWidth;
+    const boxH = previewEl.offsetHeight;
+
+    const scale = Math.min(boxW / width, boxH / height);
+    let drawW = width * scale;
+    let drawH = height * scale;
+
+    const scalePct = parseInt(document.getElementById("sigScale_payor").value, 10) || 100;
+    const factor = scalePct / 100;
+
+    drawW *= factor;
+    drawH *= factor;
+
+    const posX = parseInt(document.getElementById("sigX_payor").value, 10) || 0;
+    const posY = parseInt(document.getElementById("sigY_payor").value, 10) || 0;
+
+    page.drawImage(imgPayor, {
+      x: posX,
+      y: posY,
+      width: drawW,
+      height: drawH
+    });
+  } catch (e) {
+    console.error(e);
+  }
+}
     // Save & download
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
