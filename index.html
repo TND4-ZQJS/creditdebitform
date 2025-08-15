@@ -1012,46 +1012,67 @@ async function fillPDF(){
     // PDPA
     safeCheck(form, "PDPA", $("PDPA").checked);
 
-   /* --------- SIGNATURE IMAGE EMBEDDING (embedPng + drawImage) --------- */
+/* --------- SIGNATURE IMAGE EMBEDDING (embedPng + drawImage) --------- */
 const pages = pdfDoc.getPages();
-const pageIndex = Math.min(2, pages.length - 1); // Page 3 (index 2); adjust if needed
+const pageIndex = Math.min(2, pages.length - 1);
 const page = pages[pageIndex];
 
-// Define a maximum size for the signature box on the PDF
-const SIG_MAX_WIDTH = 160;
-const SIG_MAX_HEIGHT = 50;
+// Get preview size from HTML canvas (so PDF matches exactly what user sees)
+const previewOwner = document.querySelector("#sig_owner_preview"); // adjust ID if different
+const previewPayor = document.querySelector("#sig_payor_preview");
 
-// Owner signature
+function getScaledSize(img, previewEl) {
+  if (!previewEl) return { width: img.width, height: img.height };
+
+  // Get the actual canvas pixel size (not CSS)
+  const targetW = previewEl.width;
+  const targetH = previewEl.height;
+
+  const scale = Math.min(targetW / img.width, targetH / img.height);
+  return {
+    width: img.width * scale,
+    height: img.height * scale
+  };
+}
+
+// ---------------- OWNER SIGNATURE ----------------
 const sigOwner = localStorage.getItem("sig_owner");
-if (sigOwner) {
+if (sigOwner && previewOwner) {
   try {
     const imgOwner = await pdfDoc.embedPng(sigOwner);
-    const { width: originalWidth, height: originalHeight } = imgOwner.scaleToFit(SIG_MAX_WIDTH, SIG_MAX_HEIGHT);
+    const { width: scaledWidth, height: scaledHeight } = getScaledSize(imgOwner, previewOwner);
 
-    // To prevent the signature from being placed off-center, you can calculate the x-coordinate
-    const xOwner = 360 + (SIG_MAX_WIDTH - originalWidth) / 2; // Adjust x to center it
-    const yOwner = 90 + (SIG_MAX_HEIGHT - originalHeight) / 2; // Adjust y to center it
+    // Position signature (tweak x,y for your PDF)
+    const xOwner = 360 + (previewOwner.width - scaledWidth) / 2;
+    const yOwner = 90 + (previewOwner.height - scaledHeight) / 2;
 
-    // Embed the image using the new calculated dimensions
-    page.drawImage(imgOwner, { x: xOwner, y: yOwner, width: originalWidth, height: originalHeight });
-
+    page.drawImage(imgOwner, {
+      x: xOwner,
+      y: yOwner,
+      width: scaledWidth,
+      height: scaledHeight
+    });
   } catch (e) {
     console.error("Owner signature embed failed:", e);
   }
 }
 
-// Payor signature
+// ---------------- PAYOR SIGNATURE ----------------
 const sigPayor = localStorage.getItem("sig_payor");
-if ($("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked && sigPayor) {
+if ($("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked && sigPayor && previewPayor) {
   try {
     const imgPayor = await pdfDoc.embedPng(sigPayor);
-    const { width: originalWidth, height: originalHeight } = imgPayor.scaleToFit(SIG_MAX_WIDTH, SIG_MAX_HEIGHT);
+    const { width: scaledWidth, height: scaledHeight } = getScaledSize(imgPayor, previewPayor);
 
-    const xPayor = 360 + (SIG_MAX_WIDTH - originalWidth) / 2;
-    const yPayor = 150 + (SIG_MAX_HEIGHT - originalHeight) / 2;
+    const xPayor = 360 + (previewPayor.width - scaledWidth) / 2;
+    const yPayor = 150 + (previewPayor.height - scaledHeight) / 2;
 
-    page.drawImage(imgPayor, { x: xPayor, y: yPayor, width: originalWidth, height: originalHeight });
-
+    page.drawImage(imgPayor, {
+      x: xPayor,
+      y: yPayor,
+      width: scaledWidth,
+      height: scaledHeight
+    });
   } catch (e) {
     console.error("Payor signature embed failed:", e);
   }
