@@ -1018,14 +1018,32 @@ async function fillPDF(){
     const page = pages[pageIndex];
 
     // Owner signature
-    const sigOwner = localStorage.getItem("sig_owner");
-    if (sigOwner){
-      try{
-        const imgOwner = await pdfDoc.embedPng(sigOwner);
-        // Adjust x,y,width,height to match your PDF coordinates
-        page.drawImage(imgOwner, { x: 360, y: 90, width: 160, height: 50 });
-      } catch(e){ console.error("Owner signature embed failed:", e); }
-    }
+    // Example: draw Owner Signature
+const sigOwner = localStorage.getItem("sig_owner");
+if (sigOwner){
+  try {
+    const imgOwner = await pdfDoc.embedPng(sigOwner);
+    const { width, height } = imgOwner.size();
+
+    // Scale down to fit inside preview box dimensions
+    const previewEl = document.getElementById("preview_owner");
+    const boxW = previewEl.offsetWidth;
+    const boxH = previewEl.offsetHeight;
+
+    // maintain aspect ratio
+    let drawW = width, drawH = height;
+    const scale = Math.min(boxW / width, boxH / height);
+    drawW = width * scale;
+    drawH = height * scale;
+
+    page.drawImage(imgOwner, {
+      x: 360,   // adjust PDF x position
+      y: 90,    // adjust PDF y position
+      width: drawW,
+      height: drawH
+    });
+  } catch(e){ console.error(e); }
+}
 
     // Payor signature (only if payor section is relevant)
     const sigPayor = localStorage.getItem("sig_payor");
