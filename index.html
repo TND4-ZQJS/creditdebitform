@@ -1012,33 +1012,51 @@ async function fillPDF(){
     // PDPA
     safeCheck(form, "PDPA", $("PDPA").checked);
 
-  /* --------- SIGNATURE IMAGE EMBEDDING (embedPng + drawImage) --------- */
+/* --------- SIGNATURE IMAGE EMBEDDING (embedPng + drawImage) --------- */
 const pages = pdfDoc.getPages();
-const pageIndex = Math.min(2, pages.length - 1); // Page 3 (index 2); adjust if needed
+const pageIndex = Math.min(2, pages.length - 1);
 const page = pages[pageIndex];
 
-// Define a maximum size for the signature box on the PDF
-const SIG_MAX_WIDTH = 160;
-const SIG_MAX_HEIGHT = 50;
+// Define a new, larger size for the signature box on the PDF
+const SIG_MAX_WIDTH = 250; // Increased width
+const SIG_MAX_HEIGHT = 80;  // Increased height
 
 // Owner signature
 const sigOwner = localStorage.getItem("sig_owner");
 if (sigOwner) {
   try {
     const imgOwner = await pdfDoc.embedPng(sigOwner);
-    const { width: originalWidth, height: originalHeight } = imgOwner.scaleToFit(SIG_MAX_WIDTH, SIG_MAX_HEIGHT);
+    const { width: scaledWidth, height: scaledHeight } = imgOwner.scaleToFit(SIG_MAX_WIDTH, SIG_MAX_HEIGHT);
 
-    // To prevent the signature from being placed off-center, you can calculate the x-coordinate
-    const xOwner = 360 + (SIG_MAX_WIDTH - originalWidth) / 2; // Adjust x to center it
-    const yOwner = 90 + (SIG_MAX_HEIGHT - originalHeight) / 2; // Adjust y to center it
+    // Calculate position to keep the signature centered within the new, larger box
+    const xOwner = 360 + (SIG_MAX_WIDTH - scaledWidth) / 2;
+    const yOwner = 90 + (SIG_MAX_HEIGHT - scaledHeight) / 2;
 
     // Embed the image using the new calculated dimensions
-    page.drawImage(imgOwner, { x: xOwner, y: yOwner, width: originalWidth, height: originalHeight });
+    page.drawImage(imgOwner, { x: xOwner, y: yOwner, width: scaledWidth, height: scaledHeight });
 
   } catch (e) {
     console.error("Owner signature embed failed:", e);
   }
 }
+
+// Payor signature
+const sigPayor = localStorage.getItem("sig_payor");
+if ($("ThirdPP_Yes").checked && $("ThirdPP_SubmittedNRIC").checked && sigPayor) {
+  try {
+    const imgPayor = await pdfDoc.embedPng(sigPayor);
+    const { width: scaledWidth, height: scaledHeight } = imgPayor.scaleToFit(SIG_MAX_WIDTH, SIG_MAX_HEIGHT);
+
+    const xPayor = 360 + (SIG_MAX_WIDTH - scaledWidth) / 2;
+    const yPayor = 150 + (SIG_MAX_HEIGHT - scaledHeight) / 2;
+
+    page.drawImage(imgPayor, { x: xPayor, y: yPayor, width: scaledWidth, height: scaledHeight });
+
+  } catch (e) {
+    console.error("Payor signature embed failed:", e);
+  }
+}
+
 
 // Payor signature
 const sigPayor = localStorage.getItem("sig_payor");
