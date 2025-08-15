@@ -97,6 +97,10 @@
   #sigCanvas{ width:100%; height:220px; background:#fff; border:1px solid #ddd; border-radius:10px; touch-action:none }
   .sig-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:10px; }
 
+    /* XY% signature tuning  */
+   .hidden-inputs {display: none;}
+
+  
   /* Save indicator */
   #saveStatus{
     position:fixed; bottom:12px; right:12px; background:var(--accent); color:#fff;
@@ -383,7 +387,7 @@
     <button id="resetAll" class="secondary">Reset All</button>
   </section>
 
-  <div class="sig-controls">
+  <div class="hidden-inputs">
   <h3>Owner Signature</h3>
   <label>
     X: <input type="number" id="sigX_owner" value="360" />
@@ -396,7 +400,7 @@
   </label>
 </div>
 
-<div class="sig-controls">
+<div class="hidden-inputs">
   <h3>Payor Signature</h3>
   <label>
     X: <input type="number" id="sigX_payor" value="360" />
@@ -1045,72 +1049,47 @@ async function fillPDF(){
 
     // Owner signature
     // Example: draw Owner Signature// Owner signature
+// ==== OWNER SIGNATURE ====
 const sigOwner = localStorage.getItem("sig_owner");
 if (sigOwner) {
   try {
     const imgOwner = await pdfDoc.embedPng(sigOwner);
     const { width, height } = imgOwner.size();
 
-    const previewEl = document.getElementById("preview_owner");
-    const boxW = previewEl.offsetWidth;
-    const boxH = previewEl.offsetHeight;
-
-    const scale = Math.min(boxW / width, boxH / height);
-    let drawW = width * scale;
-    let drawH = height * scale;
-
-    const scalePct = parseInt(document.getElementById("sigScale_owner").value, 10) || 100;
-    const factor = scalePct / 100;
-
-    drawW *= factor;
-    drawH *= factor;
-
-    const posX = parseInt(document.getElementById("sigX_owner").value, 10) || 0;
-    const posY = parseInt(document.getElementById("sigY_owner").value, 10) || 0;
+    const scale = 0.45; // 45%
+    const drawW = width * scale;
+    const drawH = height * scale;
 
     page.drawImage(imgOwner, {
-      x: posX,
-      y: posY,
+      x: 50,   // Owner X
+      y: 400,  // Owner Y
       width: drawW,
       height: drawH
     });
   } catch (e) {
-    console.error(e);
+    console.error("Owner signature error:", e);
   }
 }
 
-// Payor signature
+// ==== PAYOR SIGNATURE ====
 const sigPayor = localStorage.getItem("sig_payor");
 if (sigPayor) {
   try {
     const imgPayor = await pdfDoc.embedPng(sigPayor);
     const { width, height } = imgPayor.size();
 
-    const previewEl = document.getElementById("preview_payor");
-    const boxW = previewEl.offsetWidth;
-    const boxH = previewEl.offsetHeight;
-
-    const scale = Math.min(boxW / width, boxH / height);
-    let drawW = width * scale;
-    let drawH = height * scale;
-
-    const scalePct = parseInt(document.getElementById("sigScale_payor").value, 10) || 100;
-    const factor = scalePct / 100;
-
-    drawW *= factor;
-    drawH *= factor;
-
-    const posX = parseInt(document.getElementById("sigX_payor").value, 10) || 0;
-    const posY = parseInt(document.getElementById("sigY_payor").value, 10) || 0;
+    const scale = 0.45; // 45%
+    const drawW = width * scale;
+    const drawH = height * scale;
 
     page.drawImage(imgPayor, {
-      x: posX,
-      y: posY,
+      x: 370,  // Payor X
+      y: 490,  // Payor Y
       width: drawW,
       height: drawH
     });
   } catch (e) {
-    console.error(e);
+    console.error("Payor signature error:", e);
   }
 }
     // Save & download
