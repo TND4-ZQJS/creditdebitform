@@ -387,7 +387,7 @@
     <button id="resetAll" class="secondary">Reset All</button>
   </section>
 
-  <div class="sig-controls">
+  <div class="hidden-inputs">
   <h3>Owner Signature</h3>
   <label>
     X: <input type="number" id="sigX_owner" value="360" />
@@ -1054,22 +1054,14 @@ if (sigOwner) {
     const imgOwner = await pdfDoc.embedPng(sigOwner);
     const { width, height } = imgOwner.size();
 
-    const previewEl = document.getElementById("preview_owner");
-    const boxW = previewEl.offsetWidth;
-    const boxH = previewEl.offsetHeight;
-
-    const scale = Math.min(boxW / width, boxH / height);
-    let drawW = width * scale;
-    let drawH = height * scale;
-
-    const scalePct = parseInt(document.getElementById("sigScale_owner").value, 10) || 100;
+    // Fixed values for owner
+    const scalePct = 45;
     const factor = scalePct / 100;
+    const posX = 50;
+    const posY = 400;
 
-    drawW *= factor;
-    drawH *= factor;
-
-    const posX = parseInt(document.getElementById("sigX_owner").value, 10) || 0;
-    const posY = parseInt(document.getElementById("sigY_owner").value, 10) || 0;
+    const drawW = width * factor;
+    const drawH = height * factor;
 
     page.drawImage(imgOwner, {
       x: posX,
@@ -1089,22 +1081,14 @@ if (sigPayor) {
     const imgPayor = await pdfDoc.embedPng(sigPayor);
     const { width, height } = imgPayor.size();
 
-    const previewEl = document.getElementById("preview_payor");
-    const boxW = previewEl.offsetWidth;
-    const boxH = previewEl.offsetHeight;
-
-    const scale = Math.min(boxW / width, boxH / height);
-    let drawW = width * scale;
-    let drawH = height * scale;
-
-    const scalePct = parseInt(document.getElementById("sigScale_payor").value, 10) || 100;
+    // Fixed values for payor
+    const scalePct = 45;
     const factor = scalePct / 100;
+    const posX = 370;
+    const posY = 490;
 
-    drawW *= factor;
-    drawH *= factor;
-
-    const posX = parseInt(document.getElementById("sigX_payor").value, 10) || 0;
-    const posY = parseInt(document.getElementById("sigY_payor").value, 10) || 0;
+    const drawW = width * factor;
+    const drawH = height * factor;
 
     page.drawImage(imgPayor, {
       x: posX,
@@ -1116,21 +1100,7 @@ if (sigPayor) {
     console.error(e);
   }
 }
-    
-    // Save & download
-    const pdfBytes = await pdfDoc.save();
-    const blob = new Blob([pdfBytes], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = "Filled_Credit_Card_Form.pdf"; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=> URL.revokeObjectURL(url), 2500);
 
-  } catch(err){
-    alert("PDF generation failed: " + (err.message || err));
-    console.error(err);
-  } finally {
-    $("generate").disabled = false;
-  }
-}
 
 /* ---------- Reset All ---------- */
 function resetAll(){
