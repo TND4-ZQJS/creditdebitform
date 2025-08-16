@@ -1062,14 +1062,12 @@ if (sigOwner) {
     let drawW = width * scale;
     let drawH = height * scale;
 
-    const scalePct = parseInt(document.getElementById("sigScale_owner").value, 10) || 100;
-    const factor = scalePct / 100;
+    const factor = 0.45;    // 45% scale
+    const posX = 50;         // X position on PDF
+    const posY = 400;        // Y position on PDF
 
     drawW *= factor;
     drawH *= factor;
-
-    const posX = parseInt(document.getElementById("sigX_owner").value, 10) || 0;
-    const posY = parseInt(document.getElementById("sigY_owner").value, 10) || 0;
 
     page.drawImage(imgOwner, {
       x: posX,
