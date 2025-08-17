@@ -743,11 +743,15 @@ cardName.addEventListener("input", () => {
   dateSelect.innerHTML = '<option value="">-- DD --</option>';
   for (let d = 1; d <= 31; d++) { const val = String(d).padStart(2, '0'); dateSelect.innerHTML += `<option value="${val}">${val}</option>`; }
   autoBindSave(dateSelect);
-  const monthSelect = $("Sign_Month_Select");
-  monthSelect.innerHTML = '<option value="">-- MM --</option>';
-  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-  months.forEach((m,i)=>{ const val = String(i+1).padStart(2,'0'); monthSelect.innerHTML += `<option value="${val}">${val} - ${m}</option>`; });
-  autoBindSave(monthSelect);
+ const monthSelect = $("Sign_Month_Select");
+monthSelect.innerHTML = '<option value="">-- MM --</option>';
+const months = [
+  "January","February","March","April","May","June",
+  "July","August","September","October","November","December"];
+months.forEach(m => {
+  monthSelect.innerHTML += `<option value="${m.toUpperCase()}">${m.toUpperCase()}</option>`;
+});
+autoBindSave(monthSelect);
   const yearSelect = $("Sign_Year_Select");
   yearSelect.innerHTML = '<option value="">-- YYYY --</option>';
   for (let y = 2025; y <= 2030; y++) { yearSelect.innerHTML = yearSelect.innerHTML + `<option value="${y}">${y}</option>`; }
