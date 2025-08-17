@@ -543,12 +543,12 @@ function createPolicyEntry(index){
   wrap.innerHTML = `
     <h3><span>Policy Entry ${index}</span> <button type="button" class="remove-btn" aria-label="Remove policy">Remove</button></h3>
     <label>Policy No.
-      <input type="text" id="PolicyNo${index}" placeholder="PolicyNo${index}">
+      <input type="text" id="PolicyNo${index}" placeholder="Enter policy number">
     </label>
-    <label>Insured Name
-      <input type="text" id="Insured${index}" placeholder="Insured${index}">
+    <label>Name of Insured
+      <input type="text" id="Insured${index}" placeholder="Enter name of Insured">
     </label>
-    <label>Relationship
+    <label>Relationship of Cardholder with Owner
       <select id="Relationship${index}">
         <option value="">-- CHOOSE --</option>
         ${relationshipOptionsHTML()}
