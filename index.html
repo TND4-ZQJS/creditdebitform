@@ -1117,6 +1117,9 @@ if (sigPayor) {
   }
 }
     
+    // Flatten form fields before saving
+    form.flatten();
+    
     // Save & download
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
