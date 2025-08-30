@@ -232,9 +232,9 @@
 
     <label>Date of Birth</label>
     <div class="row">
-      <select id="Text28"></select>
-      <select id="Text29"></select>
-      <input id="Text30" type="number" min="1900" max="2100" placeholder="YYYY">
+      <select id="ThirdPP_DOB_DD"></select>
+      <select id="ThirdPP_DOB_MM"></select>
+      <input id="ThirdPP_DOB_YYYY" type="number" min="1900" max="2100" placeholder="YYYY">
     </div>
 
     <label>IC No.
@@ -689,13 +689,24 @@ cardDigits.forEach((el, idx)=>{
   autoBindSave(sel);
 })();
 
+// --- Auto uppercase for signatory Policy Owner and Payor name  ---
+document.getElementById("Sign_OwnerName").addEventListener("input", e => {
+  e.target.value = e.target.value.toUpperCase();
+  saveElValue(e.target);
+});
+document.getElementById("Sign_PayorName").addEventListener("input", e => {
+  e.target.value = e.target.value.toUpperCase();
+  saveElValue(e.target);
+});
+
+
 /* Populate DOB dropdowns for Third Party */
 (function populateDOB(){
-  const daySel = $("Text28");
+  const daySel = $("ThirdPP_DOB_DD");
   daySel.innerHTML = '<option value="">-- Day --</option>';
   for(let d=1; d<=31; d++){ const val = String(d).padStart(2,'0'); daySel.innerHTML += `<option value="${val}">${val}</option>`; }
   autoBindSave(daySel);
-  const monthSel = $("Text29");
+  const monthSel = $("ThirdPP_DOB_MM");
   monthSel.innerHTML = '<option value="">-- Month --</option>';
   const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   months.forEach((m,i)=>{ const val = String(i+1).padStart(2,'0'); monthSel.innerHTML += `<option value="${val}">${val} - ${m}</option>`; });
@@ -815,8 +826,8 @@ function resizeSigCanvas(){
   scaleX = sigCanvas.width / (sigCanvas.getBoundingClientRect().width || cssWidth);
   scaleY = sigCanvas.height / (sigCanvas.getBoundingClientRect().height || cssHeight);
   // White background (prevents transparent PNG on PDFs)
-  sigCtx.fillStyle = "#fff";
-  sigCtx.fillRect(0,0,sigCanvas.width/scaleX, sigCanvas.height/scaleY);
+  //sigCtx.fillStyle = "#fff";
+  //sigCtx.fillRect(0,0,sigCanvas.width/scaleX, sigCanvas.height/scaleY);
 }
 
 function openSig(target){
@@ -844,7 +855,7 @@ function openSig(target){
 $("sigClear").addEventListener("click", ()=>{
   sigCtx.clearRect(0,0,sigCanvas.width, sigCanvas.height);
   // Repaint white bg in CSS pixels
-  sigCtx.fillStyle="#fff"; sigCtx.fillRect(0,0,sigCanvas.width/scaleX, sigCanvas.height/scaleY);
+  //sigCtx.fillStyle="#fff"; sigCtx.fillRect(0,0,sigCanvas.width/scaleX, sigCanvas.height/scaleY);
 });
 $("sigCancel").addEventListener("click", closeSigModal);
 function closeSigModal(){
@@ -1015,12 +1026,14 @@ async function fillPDF(){
     safeCheck(form, "Master_Tick", $("Master_Tick").checked);
 
     // SIGN META
-    safeSetText(form, "Sign_OwnerName", $("Sign_OwnerName").value || "");
+    safeSetText(form, "Sign_OwnerName", $("Sign_OwnerName").value.toUpperCase() || "");
     safeSetText(form, "Sign_OwnerNIRC", $("Sign_OwnerNIRC").value || "");
     safeSetText(form, "Sign_State", $("Sign_State_Select").value || "");
     safeSetText(form, "Sign_Date", $("Sign_Date_Select").value || "");
     safeSetText(form, "Sign_Month", $("Sign_Month_Select").value || "");
     safeSetText(form, "Sign_Year", $("Sign_Year_Select").value || "");
+    safeSetText(form, "Sign_PayorName", $("Sign_PayorName").value.toUpperCase() || "");
+    safeSetText(form, "Sign_PayorNIRC", $("Sign_PayorNIRC").value || "");
 
     // THIRD PARTY SECTION
     safeCheck(form, "ThirdPP_Yes", $("ThirdPP_Yes").checked);
@@ -1033,9 +1046,9 @@ async function fillPDF(){
         "ThirdPP_NatureBusiness","ThirdPP_Income",
         "ThirdPP_SourceFund_Others_Write","ThirdPP_SourceWealth_Others_Write"
       ].forEach(id=> safeSetText(form, id, $(id).value || ""));
-      safeSetText(form, "Text28", $("Text28").value || "");
-      safeSetText(form, "Text29", $("Text29").value || "");
-      safeSetText(form, "Text30", $("Text30").value || "");
+      safeSetText(form, "ThirdPP_DOB_DD", $("ThirdPP_DOB_DD").value || "");
+      safeSetText(form, "ThirdPP_DOB_MM", $("ThirdPP_DOB_MM").value || "");
+      safeSetText(form, "ThirdPP_DOB_YYYY", $("ThirdPP_DOB_YYYY").value || "");
       [
         "ThirdPP_SourceFund_Self","ThirdPP_SourceFund_Parent","ThirdPP_SourceFund_Spouse","ThirdPP_SourceFund_Others",
         "ThirdPP_SourceWealth_EmployBus","ThirdPP_SourceWealth_Invest","ThirdPP_SourceWealth_Inherit","ThirdPP_SourceWealth_Savings",
@@ -1099,7 +1112,7 @@ if (sigPayor) {
     let drawW = width * scale;
     let drawH = height * scale;
 
-    const factor = 0.45;    // 45% scale
+    const factor = 0.40;    // 45% scale
     const posX = 370;         // X position on PDF
     const posY = 490;        // Y position on PDF
 
@@ -1146,7 +1159,7 @@ function resetAll(){
        "CC_Tick","DebitC_Tick", "SameAsCardOwner", "Sign_OwnerName", "Sign_OwnerNIRC", "Sign_State_Select", "Sign_Date_Select", "Sign_Month_Select", "Sign_Year_Select",
        "ThirdPP_Yes","ThirdPP_SubmittedNRIC", "ThirdPP_Name","ThirdPP_NIRC", "ThirdPP_Nationality", "ThirdPP_CorrespAdd_Line1", "ThirdPP_CorrespAdd_Line2",
        "ThirdPP_CorrrepAdd_Postcode", "ThirdPP_CorrespAdd_Country", "ThirdPP_Email", "ThirdPP_Phone", "ThirdPP_Occupation", "ThirdPP_Employer",
-       "ThirdPP_NatureBusiness", "ThirdPP_Income", "Text28", "Text29", "Text30",
+       "ThirdPP_NatureBusiness", "ThirdPP_Income", "ThirdPP_DOB_DD", "ThirdPP_DOB_MM", "ThirdPP_DOB_YYYY",
        "ThirdPP_SourceFund_Self","ThirdPP_SourceFund_Parent","ThirdPP_SourceFund_Spouse","ThirdPP_SourceFund_Others","ThirdPP_SourceFund_Others_Write",
        "ThirdPP_SourceWealth_EmployBus","ThirdPP_SourceWealth_Invest","ThirdPP_SourceWealth_Inherit","ThirdPP_SourceWealth_Savings",
        "ThirdPP_SourceWealth_Parents","ThirdPP_SourceWealth_Spouse","ThirdPP_SourceWealth_Others","ThirdPP_SourceWealth_Others_Write",
