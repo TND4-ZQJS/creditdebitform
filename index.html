@@ -97,8 +97,33 @@
   #sigCanvas{ width:100%; height:220px; background:#fff; border:1px solid #ddd; border-radius:10px; touch-action:none }
   .sig-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:10px; }
 
-    /* XY% signature tuning  */
-   .hidden-inputs {display: none;}
+    #scrollTopBtn {
+  position: fixed;
+  bottom: 24px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: #007aff; /* iOS blue */
+  color: #fff;
+  cursor: pointer;
+  display: none; /* hidden by default */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease;
+  z-index: 999;
+}
+
+#scrollTopBtn svg {
+  pointer-events: none; /* icon doesn't block click */
+}
+
+#scrollTopBtn.show {
+  display: flex; /* show with flex centering */
+  opacity: 1;
+}
 
   
   /* Save indicator */
@@ -430,6 +455,12 @@
 </div>
 
 <div id="saveStatus">Saved</div>
+
+ <button id="scrollTopBtn" onclick="scrollToTop()" aria-label="Back to top">
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
+    <path fill-rule="evenodd" d="M8 4.354l-5.146 5.147.708.708L8 5.768l4.438 4.441.708-.708z"/>
+  </svg>
+</button>
 
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.2.0/dist/signature_pad.umd.min.js"></script>
 <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
