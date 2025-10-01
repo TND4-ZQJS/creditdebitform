@@ -1222,6 +1222,21 @@ function resetAll(){
 /* ---------- Wire buttons ---------- */
 $("generate").addEventListener("click", fillPDF);
 $("resetAll").addEventListener("click", resetAll);
+
+  // Show button when user scrolls down
+window.addEventListener("scroll", () => {
+  const btn = document.getElementById("scrollTopBtn");
+  if (document.documentElement.scrollTop > 200 || document.body.scrollTop > 200) {
+    btn.classList.add("show");
+  } else {
+    btn.classList.remove("show");
+  }
+});
+
+// Smooth scroll to top
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
 </script>
 </body>
 </html>
