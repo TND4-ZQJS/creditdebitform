@@ -1158,12 +1158,36 @@ if (sigPayor) {
     //form.flatten();
     
     // Save & download
+// Save & download
     const pdfBytes = await pdfDoc.save();
+
+    // 1. Find the first policy number input that actually has text in it
+    let policyNum = "";
+    const allPolicyInputs = document.querySelectorAll('input[id^="PolicyNo"]');
+    
+    for (let input of allPolicyInputs) {
+      if (input.value.trim() !== "") {
+        policyNum = input.value.trim();
+        break; // Stop at the first one we find
+      }
+    }
+    
+    // 2. Format the filename
+    // replace(/[^a-z0-9]/gi, '_') handles slashes/spaces
+    const safePolicy = policyNum.replace(/[^a-z0-9]/gi, '_') || "NEW";
+    const finalFileName = `${safePolicy}_creditdebit_card_form.pdf`;
+
+    // 3. Trigger the actual download
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = "Filled_Credit_Card_Form.pdf"; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=> URL.revokeObjectURL(url), 2500);
-
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = finalFileName; 
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    
+    setTimeout(() => URL.revokeObjectURL(url), 2500);
   } catch(err){
     alert("PDF generation failed: " + (err.message || err));
     console.error(err);
